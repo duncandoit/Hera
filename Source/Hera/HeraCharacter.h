@@ -92,12 +92,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Camera)
 	bool GetCameraIsChangingPov();
 
-	/** Returns Mesh1P subobject **/
-	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { 
 		return FirstPersonCameraComponent;
+	}
+	
+	/** Returns ThirdPersonCameraComponent subobject **/
+	UCameraComponent* GetThirdPersonCameraComponent() const { 
+		return ThirdPersonCameraComponent;
 	}
 
 	UFUNCTION(BlueprintCallable, Category = Camera)
@@ -105,6 +107,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = Camera)
 	void SetCameraToTPV();
+
+	/** Returns Mesh1P subobject **/
+	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
 
 protected:
 	virtual void BeginPlay();

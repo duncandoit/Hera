@@ -17,21 +17,21 @@ class HERA_API UHeraUtil  : public UBlueprintFunctionLibrary
 public:
 
 	UFUNCTION(BlueprintCallable, Category=Utils)
-	static void DebugPrint(const FString& text)
+	static void DebugPrint(const FString& text, FColor color)
 	{
-	#if UE_BUILD_DEBUG || UE_BUILD_DEVELOPMENT
+		#if UE_BUILD_DEBUG || UE_BUILD_DEVELOPMENT
 		if(GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage
 			(
 				-1, 				// Message ID
 				20.f, 			// Display duration (seconds)
-				FColor::Purple, 	// Text color
+				color, 			// Text color
 				text, 			// Debug message
 				true, 			// New displays on top
 				FVector2D(1, 1)	// Text scale x, y
 			);
 		}
-	#endif
+		#endif
 	}
 };

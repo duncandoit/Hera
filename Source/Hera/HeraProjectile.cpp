@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "HeraProjectile.h"
+#include "HeraUtil.h"
+
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 
@@ -23,13 +25,15 @@ AHeraProjectile::AHeraProjectile()
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
-	ProjectileMovement->InitialSpeed = 3000.f;
-	ProjectileMovement->MaxSpeed = 3000.f;
+	ProjectileMovement->InitialSpeed = 11000.f;
+	ProjectileMovement->MaxSpeed = 11000.f;
 	ProjectileMovement->bRotationFollowsVelocity = true;
-	ProjectileMovement->bShouldBounce = true;
+	ProjectileMovement->bShouldBounce = false;
 
 	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
+
+	UHeraUtil::DebugPrint("Just testing this shit", FColor::Green);
 }
 
 void AHeraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -42,3 +46,17 @@ void AHeraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		Destroy();
 	}
 }
+
+// void AActor::LifeSpanExpired()
+// {
+// 	UHeraUtil::DebugPrint("Exceeded liftetime!", FColor::Green);
+// 	// Extend duration while someone is looking at it
+// 	// if (playersCanSeeIt)
+// 	// {
+// 	// 	SetLifeSpan(5.f); 
+// 	// }
+// 	// else
+// 	// {
+// 	// 	Destroy();
+// 	// }
+// }
