@@ -46,17 +46,3 @@ void AHeraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UP
 		Destroy();
 	}
 }
-
-// void AActor::LifeSpanExpired()
-// {
-// 	UHeraUtil::DebugPrint("Exceeded liftetime!", FColor::Green);
-// 	// Extend duration while someone is looking at it
-// 	// if (playersCanSeeIt)
-// 	// {
-// 	// 	SetLifeSpan(5.f); 
-// 	// }
-// 	// else
-// 	// {
-// 	// 	Destroy();
-// 	// }
-// }

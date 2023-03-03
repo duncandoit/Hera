@@ -37,13 +37,13 @@ class AHeraCharacter : public ACharacter
 	TObjectPtr<USpringArmComponent> ThirdPersonCameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	bool CameraIsChangingPov;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	bool CameraIsFirstPerson;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	bool IsCameraChangeAllowed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	bool bCameraIsChangingPov;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	bool bCameraIsFirstPerson;
 
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
@@ -80,9 +80,6 @@ public:
 	/** Getter for the bool */
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	bool GetHasRifle();
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-	bool bCameraIsChangingPov;
 
 	/** Setter to set the bool */
 	UFUNCTION(BlueprintCallable, Category = Camera)

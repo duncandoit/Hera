@@ -15,6 +15,8 @@
 
 AHeraCharacter::AHeraCharacter() 
 	: IsCameraChangeAllowed(true), 
+	bCameraIsChangingPov(false),
+	bCameraIsFirstPerson(true),
 	bHasRifle(false)
 {
 	// Set size for collision capsule
@@ -139,9 +141,9 @@ bool AHeraCharacter::GetHasRifle()
 
 void AHeraCharacter::SetCameraToFPV()
 {
-	if (!CameraIsFirstPerson)
+	if (!bCameraIsFirstPerson)
 	{
-		CameraIsFirstPerson = true;
+		bCameraIsFirstPerson = true;
 		FirstPersonCameraComponent->SetActive(true);
 		ThirdPersonCameraComponent->SetActive(false);
 	}
@@ -149,9 +151,9 @@ void AHeraCharacter::SetCameraToFPV()
 
 void AHeraCharacter::SetCameraToTPV()
 {
-	if (CameraIsFirstPerson)
+	if (bCameraIsFirstPerson)
 	{
-		CameraIsFirstPerson = false;
+		bCameraIsFirstPerson = false;
 		ThirdPersonCameraComponent->SetActive(true);
 		FirstPersonCameraComponent->SetActive(false);
 	}
