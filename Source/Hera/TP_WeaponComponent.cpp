@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Final Fall Games. All Rights Reserved.
 
 
 #include "TP_WeaponComponent.h"
@@ -53,22 +53,22 @@ void UTP_WeaponComponent::Fire()
 
 
 
-			// TODO: Make into seperate Components
-			//		- ImpulseComponent
-			//		- LineTraceComponent
+			// TODO: 
+			//		1. Make a "System"
+			//		2. Make a WeaponComponent that has state data for distance
+			// 	2. Make a health component and give it to the boxes
 			//
 			// Do line trace for hitscan impact
-			FColor DebugLineColor = FColor:: Yellow;
-			float TraceDistance = 1000.f;
-			float ImpulseForce = 1000.f;
+			float TraceDistance = 10000.f; // centemeters
+			float ImpulseForce = 500.f;
 			const UCameraComponent& CharCam = *Character->GetFirstPersonCameraComponent();
 			const FVector TraceStart = CharCam.GetComponentLocation();
 			const FVector TraceEnd = TraceStart + CharCam.GetForwardVector() * TraceDistance;
 			FHitResult Hit;
 			const bool bDidHit = World->LineTraceSingleByChannel(
-				Hit,							// Hit result of the trace
-				TraceStart,					// Start vector
-				TraceEnd,						// End vector
+				Hit,											// Hit result of the trace
+				TraceStart,									// Start vector
+				TraceEnd,									// End vector
 				ECollisionChannel::ECC_Visibility	// Collision channel
 			);
 			
@@ -76,19 +76,21 @@ void UTP_WeaponComponent::Fire()
 			{
 				if ((Hit.bBlockingHit == true) && (Hit.Component != nullptr))
 				{
-					if (Hit.Component->IsSimulatingPhysics())
+					UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
+					FColor DebugLineColor = FColor:: Blue;
+					
+					if (MeshComponent->IsSimulatingPhysics())
 					{
-						UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
-
-						// Hit.Component->AddImpulseAtLocation(Character->GetVelocity() + 100.f, Hit.ImpactPoint);
-						MeshComponent->AddImpulse(CharCam.GetForwardVector() * ImpulseForce * MeshComponent->GetMass());
-						UHeraUtil::DebugPrint("Line trace hit something physical", DebugLineColor);
-
-						UHeraUtil::DebugPrint(Hit.Component->GetName(), DebugLineColor);
+						MeshComponent->AddImpulseAtLocation(
+							CharCam.GetForwardVector() * ImpulseForce * MeshComponent->GetMass(), 
+							Hit.ImpactPoint
+						);
+						
+						UHeraUtil::DebugPrint("Line trace hit physics object", DebugLineColor);
 					}
 					else 
 					{
-						UHeraUtil::DebugPrint("Line trace hit something static", DebugLineColor);
+						UHeraUtil::DebugPrint("Line trace hit static object", DebugLineColor);
 					}
 				}
 				else 
@@ -105,13 +107,13 @@ void UTP_WeaponComponent::Fire()
 
 			DrawDebugLine(
 				World, 			// World
-				TraceStart, 		// Start point
+				TraceStart, 	// Start point
 				TraceEnd, 		// End point
-				DebugLineColor, 	// Color
+				DebugLineColor,// Color
 				false, 			// Is it persistent?
-				1.f, 			// LifeTime
+				5.f, 				// LifeTime
 				(uint8)0U, 
-				1.f				// Thickness
+				0.5f				// Thickness
 			);
 		}
 	}

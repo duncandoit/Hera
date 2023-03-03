@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright Final Fall Games. All Rights Reserved.
 
 #include "TP_PickUpComponent.h"
 

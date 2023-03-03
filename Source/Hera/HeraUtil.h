@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright Final Fall Games. All Rights Reserved.
 
 #pragma once
 
