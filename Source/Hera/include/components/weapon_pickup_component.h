@@ -2,10 +2,11 @@
 
 #pragma once
 
+#include "actors/character_actor.h"
+
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
-#include "HeraCharacter.h"
-#include "TP_PickUpComponent.generated.h"
+#include "weapon_pickup_component.generated.h"
 
 // Declaration of the delegate that will be called when someone picks this up
 // The character picking this up is the parameter sent with the notification

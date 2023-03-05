@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "HeraGameMode.generated.h"
+#include "game_mode.generated.h"
 
 UCLASS(minimalapi)
 class AHeraGameMode : public AGameModeBase

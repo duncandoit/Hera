@@ -1,7 +1,8 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
-#include "HeraGameMode.h"
-#include "HeraCharacter.h"
+#include "game_mode.h"
+#include "actors/character_actor.h"
+
 #include "UObject/ConstructorHelpers.h"
 
 AHeraGameMode::AHeraGameMode()

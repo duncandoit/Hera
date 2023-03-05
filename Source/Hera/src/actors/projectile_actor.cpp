@@ -1,7 +1,7 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
-#include "HeraProjectile.h"
-#include "HeraUtil.h"
+#include "actors/projectile_actor.h"
+#include "debug_utils.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"

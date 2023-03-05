@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "TP_WeaponComponent.generated.h"
+#include "weapon_component.generated.h"
 
 class AHeraCharacter;
 

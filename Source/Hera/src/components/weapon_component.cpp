@@ -1,10 +1,10 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
 
-#include "TP_WeaponComponent.h"
-#include "HeraCharacter.h"
-#include "HeraProjectile.h"
-#include "HeraUtil.h"
+#include "components/weapon_component.h"
+#include "actors/character_actor.h"
+#include "actors/projectile_actor.h"
+#include "debug_utils.h"
 
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"
@@ -59,6 +59,7 @@ void UTP_WeaponComponent::Fire()
 			// 	2. Make a health component and give it to the boxes
 			//
 			// Do line trace for hitscan impact
+			FColor DebugLineColor = FColor:: Blue;
 			float TraceDistance = 10000.f; // centemeters
 			float ImpulseForce = 500.f;
 			const UCameraComponent& CharCam = *Character->GetFirstPersonCameraComponent();
@@ -77,7 +78,6 @@ void UTP_WeaponComponent::Fire()
 				if ((Hit.bBlockingHit == true) && (Hit.Component != nullptr))
 				{
 					UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
-					FColor DebugLineColor = FColor:: Blue;
 					
 					if (MeshComponent->IsSimulatingPhysics())
 					{
@@ -90,6 +90,7 @@ void UTP_WeaponComponent::Fire()
 					}
 					else 
 					{
+						DebugLineColor = FColor::White;
 						UHeraUtil::DebugPrint("Line trace hit static object", DebugLineColor);
 					}
 				}

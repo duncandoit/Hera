@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameEngine.h"
-#include "HeraUtil.generated.h"
+#include "debug_utils.generated.h"
 
 /**
  * 

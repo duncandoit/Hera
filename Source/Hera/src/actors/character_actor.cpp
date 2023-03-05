@@ -1,7 +1,8 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
-#include "HeraCharacter.h"
-#include "HeraProjectile.h"
+#include "actors/character_actor.h"
+#include "actors/projectile_actor.h"
+
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"

@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
-#include "HeraCharacter.generated.h"
+#include "character_actor.generated.h"
 
 class UInputComponent;
 class USkeletalMeshComponent;

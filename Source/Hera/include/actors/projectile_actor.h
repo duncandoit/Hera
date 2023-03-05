@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "HeraProjectile.generated.h"
+#include "projectile_actor.generated.h"
 
 class USphereComponent;
 class UProjectileMovementComponent;
