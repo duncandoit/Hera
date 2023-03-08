@@ -1,10 +1,10 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
 
-#include "components/weapon_component.h"
-#include "actors/character_actor.h"
-#include "actors/projectile_actor.h"
-#include "debug_utils.h"
+#include "core/components/weapon_component.h"
+#include "core/actors/character_actor.h"
+#include "core/actors/projectile_actor.h"
+#include "core/debug_utils.h"
 
 #include "GameFramework/PlayerController.h"
 #include "Camera/PlayerCameraManager.h"

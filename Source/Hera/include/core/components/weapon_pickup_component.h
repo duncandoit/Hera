@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "actors/character_actor.h"
+#include "core/actors/character_actor.h"
 
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"

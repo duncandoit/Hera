@@ -24,11 +24,11 @@ public:
 		{
 			GEngine->AddOnScreenDebugMessage
 			(
-				-1, 				// Message ID
-				20.f, 			// Display duration (seconds)
-				color, 			// Text color
-				text, 			// Debug message
-				true, 			// New displays on top
+				-1, 					// Message ID
+				20.f, 				// Display duration (seconds)
+				color, 				// Text color
+				text, 				// Debug message
+				true, 				// New displays on top
 				FVector2D(1, 1)	// Text scale x, y
 			);
 		}

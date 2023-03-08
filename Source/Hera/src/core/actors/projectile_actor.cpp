@@ -1,7 +1,7 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
-#include "actors/projectile_actor.h"
-#include "debug_utils.h"
+#include "core/actors/projectile_actor.h"
+#include "core/debug_utils.h"
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"

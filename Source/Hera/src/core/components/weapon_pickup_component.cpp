@@ -1,6 +1,6 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
-#include "components/weapon_pickup_component.h"
+#include "core/components/weapon_pickup_component.h"
 
 UTP_PickUpComponent::UTP_PickUpComponent()
 {

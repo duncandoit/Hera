@@ -1,7 +1,7 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
-#include "game_mode.h"
-#include "actors/character_actor.h"
+#include "core/game_mode.h"
+#include "core/actors/character_actor.h"
 
 #include "UObject/ConstructorHelpers.h"
 

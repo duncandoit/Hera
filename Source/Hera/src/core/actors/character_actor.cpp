@@ -1,7 +1,7 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
-#include "actors/character_actor.h"
-#include "actors/projectile_actor.h"
+#include "core/actors/character_actor.h"
+#include "core/actors/projectile_actor.h"
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
