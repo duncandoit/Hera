@@ -34,88 +34,82 @@ void UTP_WeaponComponent::Fire()
 		UWorld* const World = GetWorld();
 		if (World != nullptr)
 		{
-			// APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
-			// const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+			APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
 			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			// const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
-			//
-			//Set Spawn Collision Handling Override
-			// FActorSpawnParameters ActorSpawnParams;
-			// ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-			//
-			// Spawn the projectile at the muzzle
-			// World->SpawnActor<AHeraProjectile>(
-			// 	ProjectileClass, 
-			// 	SpawnLocation, 
-			// 	SpawnRotation, 	
-			// 	ActorSpawnParams
-			// );
-
-
-
-			// TODO: 
-			//		1. Make a "System"
-			//		2. Make a WeaponComponent that has state data for distance
-			// 	2. Make a health component and give it to the boxes
-			//
-			// Do line trace for hitscan impact
-			FColor DebugLineColor = FColor:: Blue;
-			float TraceDistance = 10000.f; // centemeters
-			float ImpulseForce = 500.f;
-			const UCameraComponent& CharCam = *Character->GetFirstPersonCameraComponent();
-			const FVector TraceStart = CharCam.GetComponentLocation();
-			const FVector TraceEnd = TraceStart + CharCam.GetForwardVector() * TraceDistance;
-			FHitResult Hit;
-			const bool bDidHit = World->LineTraceSingleByChannel(
-				Hit,											// Hit result of the trace
-				TraceStart,									// Start vector
-				TraceEnd,									// End vector
-				ECollisionChannel::ECC_Visibility	// Collision channel
-			);
+			const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
 			
-			if (bDidHit) 
-			{
-				if ((Hit.bBlockingHit == true) && (Hit.Component != nullptr))
-				{
-					UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
-					
-					if (MeshComponent->IsSimulatingPhysics())
-					{
-						MeshComponent->AddImpulseAtLocation(
-							CharCam.GetForwardVector() * ImpulseForce * MeshComponent->GetMass(), 
-							Hit.ImpactPoint
-						);
-						
-						UHeraUtil::DebugPrint("Line trace hit physics object", DebugLineColor);
-					}
-					else 
-					{
-						DebugLineColor = FColor::White;
-						UHeraUtil::DebugPrint("Line trace hit static object", DebugLineColor);
-					}
-				}
-				else 
-				{
-					DebugLineColor = FColor::White;
-					UHeraUtil::DebugPrint("Line trace succeeded but didn't make contact", DebugLineColor);
-				}
-			}
-			else 
-			{
-				DebugLineColor = FColor::Red;
-				UHeraUtil::DebugPrint("Line trace fail", DebugLineColor);
-			}
-
-			DrawDebugLine(
-				World, 			// World
-				TraceStart, 	// Start point
-				TraceEnd, 		// End point
-				DebugLineColor,// Color
-				false, 			// Is it persistent?
-				5.f, 				// LifeTime
-				(uint8)0U, 
-				0.5f				// Thickness
+			// Set Spawn Collision Handling Override
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			
+			// Spawn the projectile at the muzzle
+			World->SpawnActor<AHeraProjectile>(
+				ProjectileClass, 
+				SpawnLocation, 
+				SpawnRotation, 	
+				ActorSpawnParams
 			);
+
+
+			// Do line trace for hitscan impact
+		// 	FColor DebugLineColor = FColor:: Blue;
+		// 	float TraceDistance = 10000.f; // centemeters
+		// 	float ImpulseForce = 500.f;
+		// 	const UCameraComponent& CharCam = *Character->GetFirstPersonCameraComponent();
+		// 	const FVector TraceStart = CharCam.GetComponentLocation();
+		// 	const FVector TraceEnd = TraceStart + CharCam.GetForwardVector() * TraceDistance;
+		// 	FHitResult Hit;
+		// 	const bool bDidHit = World->LineTraceSingleByChannel(
+		// 		Hit,											// Hit result of the trace
+		// 		TraceStart,									// Start vector
+		// 		TraceEnd,									// End vector
+		// 		ECollisionChannel::ECC_Visibility	// Collision channel
+		// 	);
+			
+		// 	if (bDidHit) 
+		// 	{
+		// 		if ((Hit.bBlockingHit == true) && (Hit.Component != nullptr))
+		// 		{
+		// 			UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
+					
+		// 			if (MeshComponent->IsSimulatingPhysics())
+		// 			{
+		// 				MeshComponent->AddImpulseAtLocation(
+		// 					CharCam.GetForwardVector() * ImpulseForce * MeshComponent->GetMass(), 
+		// 					Hit.ImpactPoint
+		// 				);
+						
+		// 				UHeraUtil::DebugPrint("Line trace hit physics object", DebugLineColor);
+		// 			}
+		// 			else 
+		// 			{
+		// 				DebugLineColor = FColor::White;
+		// 				UHeraUtil::DebugPrint("Line trace hit static object", DebugLineColor);
+		// 			}
+		// 		}
+		// 		else 
+		// 		{
+		// 			DebugLineColor = FColor::White;
+		// 			UHeraUtil::DebugPrint("Line trace succeeded but didn't make contact", DebugLineColor);
+		// 		}
+		// 	}
+		// 	else 
+		// 	{
+		// 		DebugLineColor = FColor::Red;
+		// 		UHeraUtil::DebugPrint("Line trace fail", DebugLineColor);
+		// 	}
+
+		// 	DrawDebugLine(
+		// 		World, 			// World
+		// 		TraceStart, 	// Start point
+		// 		TraceEnd, 		// End point
+		// 		DebugLineColor,// Color
+		// 		false, 			// Is it persistent?
+		// 		5.f, 				// LifeTime
+		// 		(uint8)0U, 
+		// 		0.5f				// Thickness
+		// 	);
 		}
 	}
 	
