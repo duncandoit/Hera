@@ -5,7 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "AbilitySystemInterface.h"
+#include "AbilitySystemComponent.h"
+// #include <GameplayEffectTypes.h>
 #include "character_actor.generated.h"
+
+class UHeroAbilitySystemComponent;
 
 class UInputComponent;
 class USkeletalMeshComponent;
@@ -14,11 +19,32 @@ class UCameraComponent;
 class USpringArmComponent;
 class UAnimMontage;
 class USoundBase;
+class UBaseAbility;
 
 UCLASS(config=Game)
-class AHeraCharacter : public ACharacter
+class AHeraCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
+
+	// MARK: - Gamplay Ability System
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=GAS, meta = (AllowPrivateAccess = "true"))
+	class UHeroAbilitySystemComponent* AbilitySystemComponent;
+
+	UPROPERTY(BlueprintReadWrite, Category=GAS, meta = (AllowPrivateAccess = "true"))
+	class ULifeAttributeSet* LifeAttributes;
+
+	// We need to initialize the Ability System on the server and client
+	// This function is called on the server and is a convenient place to 
+	// init the Ability System there. 
+	virtual void PossessedBy(AController* NewController) override;
+	// This function is called on the client and is a convenient place to 
+	// init the Ability System there. 
+	virtual void OnRep_PlayerState() override;
+
+	void AssignInputBindings();
+
+	// MARK: - Character
 
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
@@ -49,10 +75,6 @@ class AHeraCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext;
 
-	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputAction* JumpAction;
-
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* MoveAction;
@@ -64,6 +86,28 @@ class AHeraCharacter : public ACharacter
 	
 public:
 	AHeraCharacter();
+
+	// MARK: - Gamplay Ability System
+
+	// The Ability System uses this via the IAbilitySystemInterface. 
+	// It should return a reference to this OwningActor's ASC 
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	virtual void InitializeAttributes();
+
+	// Grants the abilities set in the DefaultAbilities property to the Character when that
+	// that Character is possessed by a Controller.
+	// These abilities are usually set in the derived Blueprint 'Class Defaults' panel.
+	virtual void GiveAbilities();
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category=GAS)
+	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	// These abilities are usually set in the derived Blueprint 'Class Defaults' panel.
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category=GAS)
+	TArray<TSubclassOf<class UBaseAbility>> DefaultAbilities;
+
+	// MARK: - Character
 
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -126,14 +170,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category=Character)
 	void UnDuck(const FInputActionValue& Value);
 
-	// APawn interface
-	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	// End of APawn interface
-};
+	// MARK: - APawn interface
 
-UENUM(BlueprintType)
-enum class CameraPov : uint8
-{
-	First UMETA(DisplayName="First Person View"),
-	Third UMETA(DisplayName="Third Person View")
+	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 };

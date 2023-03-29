@@ -3,3 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+UENUM(BlueprintType)
+enum class EAbilityInputID : uint8
+{
+   None,
+   Primary,
+   Secondary,
+   Tertiary,
+   Quaternary,
+   Ultimate,
+   Melee,
+   Jump,
+   Crouch,
+   Confirm,
+   Cancel
+};

@@ -13,12 +13,16 @@ public class Hera : ModuleRules
 			"CoreUObject", 
 			"Engine", 
 			"InputCore", 
-			"EnhancedInput" 
+			"EnhancedInput",
+			"GameplayAbilities",
+			"GameplayTags",
+			"GameplayTasks"
 		});
 
 		PublicIncludePaths.AddRange(new string[] 
 		{
-			"Hera/include" 
+			"Hera",
+			"Hera/Public" 
 		});
 	}
 }

@@ -2,6 +2,9 @@
 
 #include "core/actors/character_actor.h"
 #include "core/actors/projectile_actor.h"
+#include "core/gas/life_attribute_set.h"
+#include "core/gas/abilities/base_ability.h"
+#include "core/gas/hero_asc.h"
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -9,16 +12,16 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-
+#include <GameplayEffectTypes.h>
 
 //////////////////////////////////////////////////////////////////////////
 // AHeraCharacter
 
 AHeraCharacter::AHeraCharacter() 
-	: IsCameraChangeAllowed(true), 
-	bCameraIsChangingPov(false),
-	bCameraIsFirstPerson(true),
-	bHasRifle(false)
+	: IsCameraChangeAllowed(true)
+	, bCameraIsChangingPov(false)
+	, bCameraIsFirstPerson(true)
+	, bHasRifle(false)
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
@@ -52,6 +55,14 @@ AHeraCharacter::AHeraCharacter()
 	Mesh1P->CastShadow = false;
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+
+	AHeraCharacter::AbilitySystemComponent = CreateDefaultSubobject<UHeroAbilitySystemComponent>("AbilitySystemComponent");
+	AHeraCharacter::AbilitySystemComponent->SetIsReplicated(true);
+	AHeraCharacter::AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+
+	// Initializing the AttributeSet in the Owner Actor's constructor automatically registers
+	// it with the ASC
+	LifeAttributes = CreateDefaultSubobject<ULifeAttributeSet>("LifeAttributeSet");
 }
 
 void AHeraCharacter::BeginPlay()
@@ -70,6 +81,90 @@ void AHeraCharacter::BeginPlay()
 
 }
 
+class UAbilitySystemComponent* AHeraCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void AHeraCharacter::InitializeAttributes()
+{
+	if (AHeraCharacter::AbilitySystemComponent && DefaultAttributeEffect)
+	{
+		FGameplayEffectContextHandle EffectContext = AHeraCharacter::AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+
+		FGameplayEffectSpecHandle SpecHandle = AHeraCharacter::AbilitySystemComponent->MakeOutgoingSpec(
+			DefaultAttributeEffect,	// GameplayEffect class
+			1, 							// Level
+			EffectContext				// Context
+		);
+		if (SpecHandle.IsValid())
+		{
+			FActiveGameplayEffectHandle EffectHandle = AHeraCharacter::AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
+				*SpecHandle.Data.Get() // GameplayEffect
+			);
+		}
+	}
+}
+
+void AHeraCharacter::GiveAbilities() 
+{
+	if (HasAuthority() && AHeraCharacter::AbilitySystemComponent)
+	{
+		for (TSubclassOf<UBaseAbility>& Ability : DefaultAbilities)
+		{
+			AHeraCharacter::AbilitySystemComponent->GiveAbility(
+				FGameplayAbilitySpec(
+					Ability, 
+					1, 
+					static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID), 
+					this
+				)
+			);
+		}
+	}
+}
+
+void AHeraCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	
+	// Server GAS init
+	AHeraCharacter::AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
+	InitializeAttributes();
+	GiveAbilities();
+}
+
+void AHeraCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	// Client GAS init
+	AHeraCharacter::AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
+	InitializeAttributes();
+	AssignInputBindings();
+}
+
+void AHeraCharacter::AssignInputBindings() 
+{
+	if (AHeraCharacter::AbilitySystemComponent && InputComponent)
+	{
+		const FGameplayAbilityInputBinds Bindings = FGameplayAbilityInputBinds(
+			// Confirm and Cancel are special bindings and are required to be explicitly named here
+			"Confirm", 
+			"Cancel", 
+
+			// All the enum values will be given bindings and must have the same name as in the Config/DefaultInput.ini
+			"EAbilityInputID", 
+
+			// This matches the Confirm/Cancel names with their enum values
+			static_cast<int32>(EAbilityInputID::Confirm), 
+			static_cast<int32>(EAbilityInputID::Cancel)
+		);
+		AHeraCharacter::AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Bindings);
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////// Input
 
 void AHeraCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -77,10 +172,6 @@ void AHeraCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		//Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
 		//Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHeraCharacter::Move);
 
@@ -91,6 +182,8 @@ void AHeraCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &AHeraCharacter::Duck);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AHeraCharacter::UnDuck);
 	}
+
+	AssignInputBindings();
 }
 
 
