@@ -1,7 +1,7 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
 #include "core/gas/abilities/jump_ability.h"
-#include "core/actors/character_actor.h"
+#include "core/actors/base_character_actor.h"
 #include "Hera.h"
 
 UJumpAbility::UJumpAbility()
@@ -42,7 +42,7 @@ bool UJumpAbility::CanActivateAbility(
 		return false;
 	}
 
-	const AHeraCharacter* Avatar = CastChecked<AHeraCharacter>(
+	const ACharacterBase* Avatar = CastChecked<ACharacterBase>(
       ActorInfo->AvatarActor.Get(), 
       ECastCheckedType::NullAllowed
    );

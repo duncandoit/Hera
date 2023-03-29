@@ -2,7 +2,7 @@
 
 
 #include "core/components/weapon_component.h"
-#include "core/actors/character_actor.h"
+#include "core/actors/base_character_actor.h"
 #include "core/actors/projectile_actor.h"
 #include "core/debug_utils.h"
 
@@ -131,7 +131,7 @@ void UTP_WeaponComponent::Fire()
 	}
 }
 
-void UTP_WeaponComponent::AttachWeapon(AHeraCharacter* TargetCharacter)
+void UTP_WeaponComponent::AttachWeapon(ACharacterBase* TargetCharacter)
 {
 	Character = TargetCharacter;
 	if (Character == nullptr)

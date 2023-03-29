@@ -8,7 +8,7 @@
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
 // #include <GameplayEffectTypes.h>
-#include "character_actor.generated.h"
+#include "base_character_actor.generated.h"
 
 class UHeroAbilitySystemComponent;
 
@@ -19,10 +19,10 @@ class UCameraComponent;
 class USpringArmComponent;
 class UAnimMontage;
 class USoundBase;
-class UBaseAbility;
+class UAbilityBase;
 
 UCLASS(config=Game)
-class AHeraCharacter : public ACharacter, public IAbilitySystemInterface
+class ACharacterBase : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -38,6 +38,7 @@ class AHeraCharacter : public ACharacter, public IAbilitySystemInterface
 	// This function is called on the server and is a convenient place to 
 	// init the Ability System there. 
 	virtual void PossessedBy(AController* NewController) override;
+	
 	// This function is called on the client and is a convenient place to 
 	// init the Ability System there. 
 	virtual void OnRep_PlayerState() override;
@@ -85,7 +86,7 @@ class AHeraCharacter : public ACharacter, public IAbilitySystemInterface
 
 	
 public:
-	AHeraCharacter();
+	ACharacterBase();
 
 	// MARK: - Gamplay Ability System
 
@@ -105,7 +106,7 @@ public:
 
 	// These abilities are usually set in the derived Blueprint 'Class Defaults' panel.
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category=GAS)
-	TArray<TSubclassOf<class UBaseAbility>> DefaultAbilities;
+	TArray<TSubclassOf<class UAbilityBase>> DefaultAbilities;
 
 	// MARK: - Character
 

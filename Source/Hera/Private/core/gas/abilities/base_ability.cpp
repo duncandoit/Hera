@@ -1,14 +1,14 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
 #include "core/gas/abilities/base_ability.h"
-#include "core/actors/character_actor.h"
+#include "core/actors/base_character_actor.h"
 
-UBaseAbility::UBaseAbility()
+UAbilityBase::UAbilityBase()
 {
    AbilityInputID = EAbilityInputID::Jump;
 }
 
-bool UBaseAbility::CanActivateAbility(
+bool UAbilityBase::CanActivateAbility(
    const FGameplayAbilitySpecHandle Handle, 
    const FGameplayAbilityActorInfo* ActorInfo, 
    const FGameplayTagContainer* SourceTags, 
@@ -19,7 +19,7 @@ bool UBaseAbility::CanActivateAbility(
    return true;
 }
 
-void UBaseAbility::ActivateAbility(
+void UAbilityBase::ActivateAbility(
    const FGameplayAbilitySpecHandle Handle, 
    const FGameplayAbilityActorInfo* ActorInfo, 
    const FGameplayAbilityActivationInfo ActivationInfo, 

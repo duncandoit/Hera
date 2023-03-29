@@ -7,7 +7,7 @@
 #include "jump_ability.generated.h"
 
 UCLASS()
-class HERA_API UJumpAbility : public UBaseAbility
+class HERA_API UJumpAbility : public UAbilityBase
 {
 	GENERATED_BODY()
 	

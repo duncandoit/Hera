@@ -1,6 +1,6 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
-#include "core/actors/character_actor.h"
+#include "core/actors/base_character_actor.h"
 #include "core/actors/projectile_actor.h"
 #include "core/gas/life_attribute_set.h"
 #include "core/gas/abilities/base_ability.h"
@@ -15,9 +15,9 @@
 #include <GameplayEffectTypes.h>
 
 //////////////////////////////////////////////////////////////////////////
-// AHeraCharacter
+// ACharacterBase
 
-AHeraCharacter::AHeraCharacter() 
+ACharacterBase::ACharacterBase()
 	: IsCameraChangeAllowed(true)
 	, bCameraIsChangingPov(false)
 	, bCameraIsFirstPerson(true)
@@ -56,16 +56,16 @@ AHeraCharacter::AHeraCharacter()
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
-	AHeraCharacter::AbilitySystemComponent = CreateDefaultSubobject<UHeroAbilitySystemComponent>("AbilitySystemComponent");
-	AHeraCharacter::AbilitySystemComponent->SetIsReplicated(true);
-	AHeraCharacter::AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+	ACharacterBase::AbilitySystemComponent = CreateDefaultSubobject<UHeroAbilitySystemComponent>("AbilitySystemComponent");
+	ACharacterBase::AbilitySystemComponent->SetIsReplicated(true);
+	ACharacterBase::AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
 	// Initializing the AttributeSet in the Owner Actor's constructor automatically registers
 	// it with the ASC
 	LifeAttributes = CreateDefaultSubobject<ULifeAttributeSet>("LifeAttributeSet");
 }
 
-void AHeraCharacter::BeginPlay()
+void ACharacterBase::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
@@ -81,39 +81,39 @@ void AHeraCharacter::BeginPlay()
 
 }
 
-class UAbilitySystemComponent* AHeraCharacter::GetAbilitySystemComponent() const
+class UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
 
-void AHeraCharacter::InitializeAttributes()
+void ACharacterBase::InitializeAttributes()
 {
-	if (AHeraCharacter::AbilitySystemComponent && DefaultAttributeEffect)
+	if (ACharacterBase::AbilitySystemComponent && DefaultAttributeEffect)
 	{
-		FGameplayEffectContextHandle EffectContext = AHeraCharacter::AbilitySystemComponent->MakeEffectContext();
+		FGameplayEffectContextHandle EffectContext = ACharacterBase::AbilitySystemComponent->MakeEffectContext();
 		EffectContext.AddSourceObject(this);
 
-		FGameplayEffectSpecHandle SpecHandle = AHeraCharacter::AbilitySystemComponent->MakeOutgoingSpec(
+		FGameplayEffectSpecHandle SpecHandle = ACharacterBase::AbilitySystemComponent->MakeOutgoingSpec(
 			DefaultAttributeEffect,	// GameplayEffect class
 			1, 							// Level
 			EffectContext				// Context
 		);
 		if (SpecHandle.IsValid())
 		{
-			FActiveGameplayEffectHandle EffectHandle = AHeraCharacter::AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
+			FActiveGameplayEffectHandle EffectHandle = ACharacterBase::AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
 				*SpecHandle.Data.Get() // GameplayEffect
 			);
 		}
 	}
 }
 
-void AHeraCharacter::GiveAbilities() 
+void ACharacterBase::GiveAbilities() 
 {
-	if (HasAuthority() && AHeraCharacter::AbilitySystemComponent)
+	if (HasAuthority() && ACharacterBase::AbilitySystemComponent)
 	{
-		for (TSubclassOf<UBaseAbility>& Ability : DefaultAbilities)
+		for (TSubclassOf<UAbilityBase>& Ability : DefaultAbilities)
 		{
-			AHeraCharacter::AbilitySystemComponent->GiveAbility(
+			ACharacterBase::AbilitySystemComponent->GiveAbility(
 				FGameplayAbilitySpec(
 					Ability, 
 					1, 
@@ -125,29 +125,29 @@ void AHeraCharacter::GiveAbilities()
 	}
 }
 
-void AHeraCharacter::PossessedBy(AController* NewController)
+void ACharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 	
 	// Server GAS init
-	AHeraCharacter::AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
+	ACharacterBase::AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
 	InitializeAttributes();
 	GiveAbilities();
 }
 
-void AHeraCharacter::OnRep_PlayerState()
+void ACharacterBase::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
 	// Client GAS init
-	AHeraCharacter::AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
+	ACharacterBase::AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
 	InitializeAttributes();
 	AssignInputBindings();
 }
 
-void AHeraCharacter::AssignInputBindings() 
+void ACharacterBase::AssignInputBindings() 
 {
-	if (AHeraCharacter::AbilitySystemComponent && InputComponent)
+	if (ACharacterBase::AbilitySystemComponent && InputComponent)
 	{
 		const FGameplayAbilityInputBinds Bindings = FGameplayAbilityInputBinds(
 			// Confirm and Cancel are special bindings and are required to be explicitly named here
@@ -161,33 +161,33 @@ void AHeraCharacter::AssignInputBindings()
 			static_cast<int32>(EAbilityInputID::Confirm), 
 			static_cast<int32>(EAbilityInputID::Cancel)
 		);
-		AHeraCharacter::AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Bindings);
+		ACharacterBase::AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Bindings);
 	}
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
 
-void AHeraCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+void ACharacterBase::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		//Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHeraCharacter::Move);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACharacterBase::Move);
 
 		//Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHeraCharacter::Look);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACharacterBase::Look);
 
 		//Crouching
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &AHeraCharacter::Duck);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AHeraCharacter::UnDuck);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ACharacterBase::Duck);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ACharacterBase::UnDuck);
 	}
 
 	AssignInputBindings();
 }
 
 
-void AHeraCharacter::Move(const FInputActionValue& Value)
+void ACharacterBase::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -200,7 +200,7 @@ void AHeraCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
-void AHeraCharacter::Look(const FInputActionValue& Value)
+void ACharacterBase::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
@@ -213,27 +213,27 @@ void AHeraCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void AHeraCharacter::Duck(const FInputActionValue& Value) 
+void ACharacterBase::Duck(const FInputActionValue& Value) 
 {
 	ACharacter::Crouch(true);
 }
 
-void AHeraCharacter::UnDuck(const FInputActionValue& Value) 
+void ACharacterBase::UnDuck(const FInputActionValue& Value) 
 {
 	ACharacter::UnCrouch(true);
 }
 
-void AHeraCharacter::SetHasRifle(bool bNewHasRifle)
+void ACharacterBase::SetHasRifle(bool bNewHasRifle)
 {
 	bHasRifle = bNewHasRifle;
 }
 
-bool AHeraCharacter::GetHasRifle()
+bool ACharacterBase::GetHasRifle()
 {
 	return bHasRifle;
 }
 
-void AHeraCharacter::SetCameraToFPV()
+void ACharacterBase::SetCameraToFPV()
 {
 	if (!bCameraIsFirstPerson)
 	{
@@ -243,7 +243,7 @@ void AHeraCharacter::SetCameraToFPV()
 	}
 }
 
-void AHeraCharacter::SetCameraToTPV()
+void ACharacterBase::SetCameraToTPV()
 {
 	if (bCameraIsFirstPerson)
 	{
@@ -253,12 +253,12 @@ void AHeraCharacter::SetCameraToTPV()
 	}
 }
 
-void AHeraCharacter::SetCameraIsChangingPov(bool bNewIsChanging)
+void ACharacterBase::SetCameraIsChangingPov(bool bNewIsChanging)
 {
 	bCameraIsChangingPov = bNewIsChanging;
 }
 
-bool AHeraCharacter::GetCameraIsChangingPov()
+bool ACharacterBase::GetCameraIsChangingPov()
 {
 	return bCameraIsChangingPov;
 }

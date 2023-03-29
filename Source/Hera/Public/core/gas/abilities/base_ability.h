@@ -9,12 +9,12 @@
 
 
 UCLASS()
-class HERA_API UBaseAbility : public UGameplayAbility
+class HERA_API UAbilityBase : public UGameplayAbility
 {
 	GENERATED_BODY()
 
 public: 
-	UBaseAbility();
+	UAbilityBase();
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Hera|Ability|Base")
 	EAbilityInputID AbilityInputID = EAbilityInputID::None;

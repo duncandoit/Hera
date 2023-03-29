@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "core/actors/character_actor.h"
+#include "core/actors/base_character_actor.h"
 
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
@@ -10,7 +10,7 @@
 
 // Declaration of the delegate that will be called when someone picks this up
 // The character picking this up is the parameter sent with the notification
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUp, AHeraCharacter*, PickUpCharacter);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUp, ACharacterBase*, PickUpCharacter);
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class HERA_API UTP_PickUpComponent : public USphereComponent

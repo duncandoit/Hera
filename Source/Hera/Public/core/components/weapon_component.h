@@ -6,7 +6,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "weapon_component.generated.h"
 
-class AHeraCharacter;
+class ACharacterBase;
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class HERA_API UTP_WeaponComponent : public USkeletalMeshComponent
@@ -43,7 +43,7 @@ public:
 
 	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void AttachWeapon(AHeraCharacter* TargetCharacter);
+	void AttachWeapon(ACharacterBase* TargetCharacter);
 
 	/** Make the weapon Fire a Projectile */
 	UFUNCTION(BlueprintCallable, Category="Weapon")
@@ -56,5 +56,5 @@ protected:
 
 private:
 	/** The Character holding this weapon*/
-	AHeraCharacter* Character;
+	ACharacterBase* Character;
 };
