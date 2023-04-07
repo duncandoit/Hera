@@ -28,10 +28,14 @@ class ACharacterBase : public ACharacter, public IAbilitySystemInterface
 
 	// MARK: - Gamplay Ability System
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=GAS, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(
+		VisibleAnywhere, BlueprintReadOnly, Category="Hera|Character|AbilitySystem", 
+		meta = (AllowPrivateAccess = "true"))
 	class UHeroAbilitySystemComponent* AbilitySystemComponent;
 
-	UPROPERTY(BlueprintReadWrite, Category=GAS, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(
+		BlueprintReadWrite, Category="Hera|Character|Attributes", 
+		meta = (AllowPrivateAccess = "true"))
 	class ULifeAttributeSet* LifeAttributes;
 
 	// We need to initialize the Ability System on the server and client
@@ -47,19 +51,19 @@ class ACharacterBase : public ACharacter, public IAbilitySystemInterface
 
 	// MARK: - Character
 
-	/** Pawn mesh: 1st person view (arms; seen only by self) */
+	// Pawn mesh: 1st person view (arms; seen only by self)
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	TObjectPtr<USkeletalMeshComponent> Mesh1P;
 
-	/** First person camera */
+	// First person camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
 
-	/** Third person camera */
+	// Third person camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> ThirdPersonCameraComponent;
 
-	/** Third person camera spring arm */
+	// Third person camera spring arm
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> ThirdPersonCameraBoom;
 
@@ -90,6 +94,39 @@ public:
 
 	// MARK: - Gamplay Ability System
 
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetMaxHealth() const;
+
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetHealth() const;
+
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetMaxShields() const;
+
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetShields() const;
+
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetMaxArmor() const;
+
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetArmor() const;
+
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetOverHealth() const;
+
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetOverArmor() const;
+
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	bool IsAlive() const;
+
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetMoveSpeed() const;
+
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetMoveSpeedBaseValue() const;
+
 	// The Ability System uses this via the IAbilitySystemInterface. 
 	// It should return a reference to this OwningActor's ASC 
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
@@ -101,11 +138,11 @@ public:
 	// These abilities are usually set in the derived Blueprint 'Class Defaults' panel.
 	virtual void GiveAbilities();
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category=GAS)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Hera|Character|Base")
 	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
 
 	// These abilities are usually set in the derived Blueprint 'Class Defaults' panel.
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category=GAS)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Hera|Character|Base")
 	TArray<TSubclassOf<class UAbilityBase>> DefaultAbilities;
 
 	// MARK: - Character

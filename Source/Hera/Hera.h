@@ -8,10 +8,10 @@ UENUM(BlueprintType)
 enum class EAbilityInputID : uint8
 {
    None,
-   Primary,
-   Secondary,
-   Tertiary,
-   Quaternary,
+   Primary1,
+   Primary2,
+   Utility1,
+   Utility2,
    Ultimate,
    Melee,
    Jump,

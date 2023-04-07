@@ -7,7 +7,6 @@
 #include "Hera.h"
 #include "base_ability.generated.h"
 
-
 UCLASS()
 class HERA_API UAbilityBase : public UGameplayAbility
 {
@@ -16,22 +15,24 @@ class HERA_API UAbilityBase : public UGameplayAbility
 public: 
 	UAbilityBase();
 
+	/// Abilities with this set will automatically activate when the input is pressed
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Hera|Ability|Base")
 	EAbilityInputID AbilityInputID = EAbilityInputID::None;
 
-protected:
-	virtual void ActivateAbility(
-		const FGameplayAbilitySpecHandle Handle, 
-		const FGameplayAbilityActorInfo* ActorInfo, 
-		const FGameplayAbilityActivationInfo ActivationInfo, 
-		const FGameplayEventData* TriggerEventData
-	) override;
+	/// Value to associate an ability with an slot without tying it to an automatically activated input.
+	/// Passive abilities won't be tied to an input so we need a way to generically associate abilities with slots.
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Hera|Ability|Base")
+	EAbilityInputID AbilityID = EAbilityInputID::None;
 
-	virtual bool CanActivateAbility(
-		const FGameplayAbilitySpecHandle Handle, 
+	/// Tells an ability to activate immediately when its granted. Used for passive abilities and abilities 
+	/// forced on others.
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Hera|Ability|Base")
+	bool ActivateAbilityOnGranted = false;
+
+	/// If an ability is marked as 'ActivateAbilityOnGranted', activate them immediately when given here
+	/// Epic's comment: Projects may want to initiate passives or do other "BeginPlay" type of logic here.
+	virtual void OnAvatarSet(
 		const FGameplayAbilityActorInfo* ActorInfo, 
-		const FGameplayTagContainer* SourceTags, 
-		const FGameplayTagContainer* TargetTags, 
-		FGameplayTagContainer* OptionalRelevantTags
-	) const override;
+		const FGameplayAbilitySpec& Spec
+	) override;
 };

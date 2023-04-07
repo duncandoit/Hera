@@ -14,8 +14,8 @@
 #include "EnhancedInputSubsystems.h"
 #include <GameplayEffectTypes.h>
 
-//////////////////////////////////////////////////////////////////////////
-// ACharacterBase
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: - ACharacterBase
 
 ACharacterBase::ACharacterBase()
 	: IsCameraChangeAllowed(true)
@@ -71,15 +71,128 @@ void ACharacterBase::BeginPlay()
 	Super::BeginPlay();
 
 	//Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	if (auto PlayerController = Cast<APlayerController>(Controller))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		auto Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
+			PlayerController->GetLocalPlayer()
+		);
+		if (Subsystem)
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: - Attributes
+
+float ACharacterBase::GetMaxHealth() const
+{
+	if (IsValid(LifeAttributes))
+	{
+		return LifeAttributes->GetMaxHealth();
+	}
+
+	return 0.0f;
+}
+
+float ACharacterBase::GetHealth() const
+{
+	if (IsValid(LifeAttributes))
+	{
+		return LifeAttributes->GetHealth();
+	}
+
+	return 0.0f;
+}
+
+float ACharacterBase::GetMaxShields() const
+{
+	if (IsValid(LifeAttributes))
+	{
+		return LifeAttributes->GetMaxShields();
+	}
+
+	return 0.0f;
+}
+
+float ACharacterBase::GetShields() const
+{
+	if (IsValid(LifeAttributes))
+	{
+		return LifeAttributes->GetShields();
+	}
+
+	return 0.0f;
+}
+
+float ACharacterBase::GetMaxArmor() const
+{
+	if (IsValid(LifeAttributes))
+	{
+		return LifeAttributes->GetMaxArmor();
+	}
+
+	return 0.0f;
+}
+
+float ACharacterBase::GetArmor() const
+{
+	if (IsValid(LifeAttributes))
+	{
+		return LifeAttributes->GetArmor();
+	}
+
+	return 0.0f;
+}
+
+float ACharacterBase::GetOverHealth() const
+{
+	if (IsValid(LifeAttributes))
+	{
+		return LifeAttributes->GetOverHealth();
+	}
+
+	return 0.0f;
+}
+
+float ACharacterBase::GetOverArmor() const
+{
+	if (IsValid(LifeAttributes))
+	{
+		return LifeAttributes->GetOverArmor();
+	}
+
+	return 0.0f;
+}
+
+bool ACharacterBase::IsAlive() const
+{
+	return GetHealth() > 0;
+}
+
+float ACharacterBase::GetMoveSpeed() const
+{
+	if (IsValid(LifeAttributes))
+	{
+		return LifeAttributes->GetMoveSpeed();
+	}
+
+	return 0.0f;
+}
+
+float ACharacterBase::GetMoveSpeedBaseValue() const
+{
+	if (IsValid(LifeAttributes))
+	{
+		return LifeAttributes->GetMoveSpeedAttribute().GetGameplayAttributeData(LifeAttributes)->GetBaseValue();
+	}
+
+	return 0.0f;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: - Abilties
 
 class UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 {
@@ -100,7 +213,7 @@ void ACharacterBase::InitializeAttributes()
 		);
 		if (SpecHandle.IsValid())
 		{
-			FActiveGameplayEffectHandle EffectHandle = ACharacterBase::AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
+			auto EffectHandle = ACharacterBase::AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
 				*SpecHandle.Data.Get() // GameplayEffect
 			);
 		}
@@ -145,6 +258,9 @@ void ACharacterBase::OnRep_PlayerState()
 	AssignInputBindings();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: - Inputs
+
 void ACharacterBase::AssignInputBindings() 
 {
 	if (ACharacterBase::AbilitySystemComponent && InputComponent)
@@ -164,8 +280,6 @@ void ACharacterBase::AssignInputBindings()
 		ACharacterBase::AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Bindings);
 	}
 }
-
-//////////////////////////////////////////////////////////////////////////// Input
 
 void ACharacterBase::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
@@ -232,6 +346,9 @@ bool ACharacterBase::GetHasRifle()
 {
 	return bHasRifle;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MARK: - Camera
 
 void ACharacterBase::SetCameraToFPV()
 {

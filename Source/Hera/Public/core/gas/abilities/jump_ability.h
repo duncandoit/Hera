@@ -6,6 +6,7 @@
 #include "core/gas/abilities/base_ability.h"
 #include "jump_ability.generated.h"
 
+// Non-Intanced standard jump Ability
 UCLASS()
 class HERA_API UJumpAbility : public UAbilityBase
 {

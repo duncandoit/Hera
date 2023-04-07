@@ -8,6 +8,7 @@ UJumpAbility::UJumpAbility()
 {
 	AbilityInputID = EAbilityInputID::Jump;
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::NonInstanced;
+	// AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability.Jump")));
 }
 
 void UJumpAbility::ActivateAbility(
@@ -21,10 +22,16 @@ void UJumpAbility::ActivateAbility(
 	{
 		if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 		{
-			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+			EndAbility(
+				CurrentSpecHandle, 
+				CurrentActorInfo, 
+				CurrentActivationInfo, 
+				/*bReplicateEndAbility*/true, 
+				/*bWasCancelled*/true
+			);
 		}
 
-		ACharacter* Avatar = CastChecked<ACharacter>(ActorInfo->AvatarActor.Get());
+		auto Avatar = CastChecked<ACharacter>(ActorInfo->AvatarActor.Get());
 		Avatar->Jump();
 	}
 }
@@ -69,7 +76,6 @@ void UJumpAbility::InputReleased(
 // it would need to make sure the Montage that *it* played was still playing, and if so, to cancel it. If this is 
 // something we need to support, we may need some light weight data structure to represent 'non intanced abilities 
 // in action' with a way to cancel/end them.
-//
 void UJumpAbility::CancelAbility(
    const FGameplayAbilitySpecHandle Handle, 
    const FGameplayAbilityActorInfo* ActorInfo, 
@@ -93,6 +99,6 @@ void UJumpAbility::CancelAbility(
 
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
 
-	ACharacter* Character = CastChecked<ACharacter>(ActorInfo->AvatarActor.Get());
-	Character->StopJumping();
+	ACharacter* Avatar = CastChecked<ACharacter>(ActorInfo->AvatarActor.Get());
+	Avatar->StopJumping();
 }

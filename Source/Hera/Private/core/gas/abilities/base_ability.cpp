@@ -1,39 +1,29 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
 #include "core/gas/abilities/base_ability.h"
-#include "core/actors/base_character_actor.h"
+
+#include "AbilitySystemComponent.h"
+#include "GameplayTagContainer.h"
 
 UAbilityBase::UAbilityBase()
 {
-   AbilityInputID = EAbilityInputID::Jump;
+	// Default to Instance Per Actor
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+
+	// Default tags that block this ability from activating
+	// ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("State.Dead")));
+	// ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("State.Debuff.Stun")));
 }
 
-bool UAbilityBase::CanActivateAbility(
-   const FGameplayAbilitySpecHandle Handle, 
-   const FGameplayAbilityActorInfo* ActorInfo, 
-   const FGameplayTagContainer* SourceTags, 
-   const FGameplayTagContainer* TargetTags, 
-   FGameplayTagContainer* OptionalRelevantTags
-) const
-{
-   return true;
-}
-
-void UAbilityBase::ActivateAbility(
-   const FGameplayAbilitySpecHandle Handle, 
-   const FGameplayAbilityActorInfo* ActorInfo, 
-   const FGameplayAbilityActivationInfo ActivationInfo, 
-   const FGameplayEventData* TriggerEventData
+void UAbilityBase::OnAvatarSet(
+	const FGameplayAbilityActorInfo* ActorInfo, 
+	const FGameplayAbilitySpec& Spec
 )
 {
-   if (HasAuthorityOrPredictionKey(ActorInfo, &ActivationInfo))
-	{
-		if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
-		{
-			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-		}
+	Super::OnAvatarSet(ActorInfo, Spec);
 
-		ACharacter* Character = CastChecked<ACharacter>(ActorInfo->AvatarActor.Get());
-		Character->Jump();
+	if (ActivateAbilityOnGranted)
+	{
+		ActorInfo->AbilitySystemComponent->TryActivateAbility(Spec.Handle, false);
 	}
 }
