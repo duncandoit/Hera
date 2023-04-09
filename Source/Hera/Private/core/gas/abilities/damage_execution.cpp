@@ -1,6 +1,6 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
-#include "core/gas/effects/damage_exec_calc.h"
+#include "core/gas/abilities/damage_execution.h"
 #include "core/gas/life_attribute_set.h"
 #include "core/gas/hero_asc.h"
 
@@ -41,7 +41,7 @@ static const DamageStatics& gkDamageStatics()
 	return DAMAGE_STATICS;
 }
 
-UDamageExecCalc::UDamageExecCalc()
+UDamageExecution::UDamageExecution()
 {
 	CritMultiplier = 2.0f;
 
@@ -50,7 +50,7 @@ UDamageExecCalc::UDamageExecCalc()
 	RelevantAttributesToCapture.Add(gkDamageStatics().OverArmorDef);
 }
 
-void UDamageExecCalc::Execute_Implementation(
+void UDamageExecution::Execute_Implementation(
 	const FGameplayEffectCustomExecutionParameters& ExecutionParams, 
 	OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput
 ) const
@@ -123,16 +123,23 @@ void UDamageExecCalc::Execute_Implementation(
 	// }
 	
 	// All Armor in the Health Pool will mitigate 50% of the incoming damage
-	float MitigatedDamage = FMath::Min<float>(UnmitigatedDamage, (Armor + OverArmor));
-	float TrueDamage = UnmitigatedDamage - MitigatedDamage + (MitigatedDamage * 0.5f);
+	const float DamageMitigated = FMath::Min<float>(UnmitigatedDamage, (Armor + OverArmor));
+	const float FinalDamage = UnmitigatedDamage - DamageMitigated + (DamageMitigated * 0.5f);
 
-	if (MitigatedDamage > 0.f)
+	if (FinalDamage > 0.f)
 	{
 		// Set the Target's damage meta attribute
 		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(
 			gkDamageStatics().DamageProperty, 
 			EGameplayModOp::Additive, 
-			MitigatedDamage
+			FinalDamage
 		));
+
+		// Broadcast to the Target's ASC
+		if (const auto TargetHeroASC = Cast<UHeroAbilitySystemComponent>(TargetASC))
+		{
+			const auto SourceHeroASC = Cast<UHeroAbilitySystemComponent>(SourceASC);
+			TargetHeroASC->OnReceivedDamage(SourceHeroASC, UnmitigatedDamage, FinalDamage);
+		}
 	}
 }

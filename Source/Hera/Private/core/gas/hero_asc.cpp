@@ -3,11 +3,11 @@
 
 #include "core/gas/hero_asc.h"
 
-void UHeroAbilitySystemComponent::ReceiveDamage(
+void UHeroAbilitySystemComponent::OnReceivedDamage(
    UHeroAbilitySystemComponent* SourceASC, 
    float UnmitigatedDamage, 
-   float MitigatedDamage
+   float FinalDamage
 )
 {
-	ReceivedDamage.Broadcast(SourceASC, UnmitigatedDamage, MitigatedDamage);
+	DamageReceivedDelegate.Broadcast(SourceASC, UnmitigatedDamage, FinalDamage);
 }

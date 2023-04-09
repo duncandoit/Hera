@@ -15,7 +15,7 @@ ULifeAttributeSet::ULifeAttributeSet()
 
 void ULifeAttributeSet::HandleDamage(const float DamageReceived /*, SourceCharacterTags*/)
 {
-	// TODO: Check for GameplayTags like:
+	/// TODO: Check for GameplayTags like:
 	//       - Immortal       : Can't fall below 1hp
 	//       - Invulnerable   : Doesn't take any damage
 	//       - Weakened       : Takes more damage
@@ -45,6 +45,8 @@ void ULifeAttributeSet::HandleDamage(const float DamageReceived /*, SourceCharac
 	if (OldOverArmor > 0.0f)
 	{
 		SetOverArmor(DamagedValue(OldOverArmor));
+
+
 	}
 	
 	// OverHealth
@@ -70,55 +72,6 @@ void ULifeAttributeSet::HandleDamage(const float DamageReceived /*, SourceCharac
 	{
 		SetHealth(DamagedValue(OldHealth));
 	}
-
-	// // OverArmor
-	// const float OldOverArmor = GetOverArmor();
-	// float DamageRemaining = DamageReceived - OldOverArmor;
-	// if (OldOverArmor > 0 && DamageReceived > 0)
-	// {
-	// 	const float NewOverArmor = OldOverArmor - DamageReceived;
-	// 	SetOverArmor(FMath::Clamp<float>(NewOverArmor, 0.0f, OldOverArmor));
-	// }
-
-	// // This keeps the remaining damage from accidentally healing you
-	// auto NonNegative = [](const float Value) -> float {
-	// 	return Value < 0 ? 0 : Value;
-	// };
-
-	// // OverHealth
-	// const float OldOverHealth = GetOverHealth();
-	// if (DamageRemaining > 0 && OldOverHealth > 0) 
-	// {
-	// 	DamageRemaining = DamageRemaining - OldOverHealth;
-	// 	const float NewOverHealth = OldOverHealth - NonNegative(DamageRemaining);
-	// 	SetOverHealth(FMath::Clamp<float>(NewOverhealth, 0.0f, OldOverHealth));
-	// }
-
-	// // Armor
-	// const float OldArmor = GetArmor();
-	// if (DamageRemaining > 0 && OldArmor > 0) 
-	// {
-	// 	DamageRemaining = DamageRemaining - OldArmor;
-	// 	const float NewArmor = OldArmor - NonNegative(DamageRemaining);
-	// 	SetArmor(FMath::Clamp<float>(NewArmor, 0.0f, OldArmor));
-	// }
-
-	// // Shields
-	// const float OldShields = GetShields();
-	// if (DamageRemaining > 0 && OldShields > 0) 
-	// {
-	// 	DamageRemaining = DamageRemaining - OldShields;
-	// 	const float NewShields = OldShields - NonNegative(DamageRemaining);
-	// 	SetShields(FMath::Clamp<float>(NewShields, 0.0f, OldShields));
-	// }
-
-	// // Health
-	// if (DamageRemaining > 0)
-	// {
-	// 	const float OldHealth = GetHealth();
-	// 	const float NewHealth = OldHealth - NonNegative(DamageRemaining);
-	// 	SetHealth(FMath::Clamp(NewHealth, 0.0f, OldHealth));
-	// }
 }
 
 void ULifeAttributeSet::HandleHealing(const float HealingReceived)
@@ -178,13 +131,13 @@ void ULifeAttributeSet::HandleKillReward(UAbilitySystemComponent* SourceASC)
 	const int NewModsCount = 1; // XP
 	BountyEffect->Modifiers.SetNum(BountyModInfoCount + NewModsCount);
 
-	// XP Reward
+	// XP Reward for the Source
 	FGameplayModifierInfo& InfoXP = BountyEffect->Modifiers[BountyModInfoCount];
 	InfoXP.ModifierMagnitude = FScalableFloat(GetRewardXP());
 	InfoXP.ModifierOp = EGameplayModOp::Additive;
 	InfoXP.Attribute = ULifeAttributeSet::GetXPAttribute();
 
-	// Potential gold reward
+	// Potential gold reward for the Source
 	// FGameplayModifierInfo& InfoGold = BountyEffect->Modifiers[BountyModInfoCount + 1];
 	// InfoGold.ModifierMagnitude = FScalableFloat(GetGoldBounty());
 	// InfoGold.ModifierOp = EGameplayModOp::Additive;
@@ -193,6 +146,10 @@ void ULifeAttributeSet::HandleKillReward(UAbilitySystemComponent* SourceASC)
 	// Apply the reward to the killer
 	SourceASC->ApplyGameplayEffectToSelf(BountyEffect, 1.0f, SourceASC->MakeEffectContext());
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+/// MARK: - UAttributeSet overrides
+//---------------------------------------------------------------------------------------------------------------------
 
 void ULifeAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
@@ -274,7 +231,7 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		{
 			SourceCharacter = Cast<ACharacterBase>(SourceActor);
 		}
-		
+
 		// Get Source Actor if the context has a causer set
 		if (Context.GetEffectCauser())
 		{
@@ -282,7 +239,9 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		}
 	}
 
-	// MARK: Handle Damage/Healing
+	//----------------------------------------------------------------------------------------
+	/// MARK: Handle Damage/Healing
+	//----------------------------------------------------------------------------------------
 
 	// Damage
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
@@ -329,9 +288,11 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		HandleHealing(HealingReceived);
 	} // Healing
 
-	// MARK: Handle manual Attribute changes
-	//       : These changes were made in the ExecutionCalculation.
-	//       : Normal Health, Shields, Armor, etc loss/gain should go through Damage/Healing.
+   //----------------------------------------------------------------------------------------
+	/// MARK: Handle manual Attribute changes
+	//        : These changes were made in the ExecutionCalculation.
+	//        : Normal Health, Shields, Armor, etc loss/gain should go through Damage/Healing.
+	//----------------------------------------------------------------------------------------
 	
 	// Health
 	else if (Data.EvaluatedData.Attribute == GetHealthAttribute())
@@ -363,6 +324,10 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		SetOverArmor(FMath::Clamp(GetOverArmor(), 0.0f, UE_MAX_FLT));
 	}
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+/// MARK: - Attributes
+//---------------------------------------------------------------------------------------------------------------------
 
 void ULifeAttributeSet::AdjustAttributeOnMaxChange(
    FGameplayAttributeData& AffectedAttribute, 

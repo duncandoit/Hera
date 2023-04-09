@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "GameplayEffectExecutionCalculation.h"
-#include "damage_exec_calc.generated.h"
+#include "damage_execution.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class HERA_API UDamageExecCalc : public UGameplayEffectExecutionCalculation
+class HERA_API UDamageExecution : public UGameplayEffectExecutionCalculation
 {
 	GENERATED_BODY()
 	
 public:
-	UDamageExecCalc();
+	UDamageExecution();
 
 	virtual void Execute_Implementation(
 		const FGameplayEffectCustomExecutionParameters& ExecutionParams, 

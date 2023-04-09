@@ -7,6 +7,8 @@
 #include "AbilitySystemComponent.h"
 #include "life_attribute_set.generated.h"
 
+///The Getter returns the CurrentValue
+// The Setter sets the BaseValue
 #define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
 	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
 	GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
@@ -33,13 +35,17 @@ class HERA_API ULifeAttributeSet : public UAttributeSet
 public:
 	ULifeAttributeSet();
 
-	// MARK: - UAttributeSet overrides
+	//------------------------------------------------------------------------------------------------------------------
+	/// MARK: - UAttributeSet overrides
+	//------------------------------------------------------------------------------------------------------------------
 
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	// Mark: - Health related Attributes
+	//------------------------------------------------------------------------------------------------------------------
+	/// MARK: - Health related Attributes
+	//------------------------------------------------------------------------------------------------------------------
 
 	/// Damage is a meta attribute used by the DamageExecution to calculate final damage.
 	/// Temporary value that only exists on the Server. Not replicated.
@@ -93,9 +99,11 @@ public:
 	FGameplayAttributeData OverArmor;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, OverArmor);
 
-	// MARK: - Stat related Attributes
+	//------------------------------------------------------------------------------------------------------------------
+	/// MARK: - BaseStat / EffortStat Attributes
+	//------------------------------------------------------------------------------------------------------------------
 
-	/// TODO: Granular stats -- Should these be in another UAttributeSet?
+	/// TODO: Implement granular stats -- Should these be in another UAttributeSet?
 	//
 	//  BaseStat: 
 	//  The fundamental, unchangeable set of stats that are unique for each Hero type or Actor type.

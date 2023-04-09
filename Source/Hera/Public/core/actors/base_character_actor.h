@@ -127,6 +127,12 @@ public:
 	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
 	float GetMoveSpeedBaseValue() const;
 
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetXP() const;
+
+	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
+	float GetRewardXP() const;
+
 	// The Ability System uses this via the IAbilitySystemInterface. 
 	// It should return a reference to this OwningActor's ASC 
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
