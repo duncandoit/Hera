@@ -5,9 +5,24 @@
 
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+// #include "Engine/World.h"
+
+AProjectileBase::AProjectileBase()
+{
+	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(FName("ProjectileMovement"));
+	
+	// Default lifespan in seconds
+	InitialLifeSpan = 10.f;
+
+	// Set true to call Tick() every frame, false to improve performance if you don't need it
+	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
+	NetUpdateFrequency = 60.0f;
+}
 
 AHeraProjectile::AHeraProjectile() 
-: damage(10)
+: AProjectileBase()
+, damage(10)
 {
 	// Use a sphere as a simple collision representation
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
@@ -23,20 +38,22 @@ AHeraProjectile::AHeraProjectile()
 	RootComponent = CollisionComp;
 
 	// Use a ProjectileMovementComponent to govern this projectile's movement
-	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
 	ProjectileMovement->InitialSpeed = 11000.f;
 	ProjectileMovement->MaxSpeed = 11000.f;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 
-	// Die after 3 seconds by default
 	InitialLifeSpan = 3.0f;
-
-	UHeraUtil::DebugPrint("Just testing this shit", FColor::Green);
 }
 
-void AHeraProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AHeraProjectile::OnHit(
+	UPrimitiveComponent* HitComp, 
+	AActor* OtherActor, 
+	UPrimitiveComponent* OtherComp, 
+	FVector NormalImpulse, 
+	const FHitResult& Hit
+)
 {
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())

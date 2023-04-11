@@ -127,22 +127,32 @@ public:
 	//  
 	/// SCALES: 
 	//  1 is normal, >1 is a buff, <1 is a nerf, 0 is disabled
+	//  - DamageDeltScale
+	//  - DamageReceivedScale
+	//  - HealingDeltScale
 	//  - HealingReceivedScale
 	//  - RegenerateHealthPoolScale
 	//  - WeaponSpreadScale
 	//  - ProjectileSpeedScale
 	//  - DamageFalloffDistanceScale
-	//  - MaxDamageDistanceScale
+	//  - DamageMaxRangeScale
 	//  - FireRateScale
 	//  - CooldownRateScale
 	//  - MoveSpeedScale
 	//  
 	/// OTHER:
 	//  Values based on distance, speed, time, etc.
-	//  - WeaponSpread
+	//  - WeaponDamageFalloffDistance
+	//  - WeaponDamageMaxDistance
+	//  - WeaponSpreadMin
+	//  - WeaponSpreadMax
+	//  - WeaponSpreadProcess
+	//  - WeaponSpreadRecovery
+	//  - WeaponReloadTime
+	//  - WeaponAmmoMax
+	//  - WeaponAmmoRemaining
 	//  - ProjectileSpeed
-	//  - DamageFalloffDistance
-	//  - MaxDamageDistance
+	
 	//  - FireRate
 
 	/// MoveSpeed affects how fast characters can move in cm/s.

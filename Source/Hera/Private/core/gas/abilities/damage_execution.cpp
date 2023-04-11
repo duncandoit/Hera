@@ -98,15 +98,15 @@ void UDamageExecution::Execute_Implementation(
 		Damage
 	);
 	// Add SetByCaller damage if it exists
-	Damage += FMath::Max<float>(
-		// DataName, WarnIfNotFound, DefaultIfNotFound
-		EffectSpec.GetSetByCallerMagnitude(
-			FGameplayTag::RequestGameplayTag(FName("Data.Damage")), 
-			false, 
-			-1.0f
-		), 
-		0.0f
-	);
+	// Damage += FMath::Max<float>(
+	// 	// DataName, WarnIfNotFound, DefaultIfNotFound
+	// 	EffectSpec.GetSetByCallerMagnitude(
+	// 		FGameplayTag::RequestGameplayTag(FName("Data.Damage")), 
+	// 		false, 
+	// 		-1.0f
+	// 	), 
+	// 	0.0f
+	// );
 
 	// Can multiply any damage boosters here
 	float UnmitigatedDamage = Damage; 

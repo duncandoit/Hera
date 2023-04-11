@@ -153,14 +153,14 @@ void ULifeAttributeSet::HandleKillReward(UAbilitySystemComponent* SourceASC)
 
 void ULifeAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
-	Super::PreAttributeChange(Attribute, NewValue);
-
-   // Notes:
-   // - This is called whenever attributes change, If a Max value changes, adjust current to 
-   //   keep Current % of Current to Max.
+	// Notes:
+   // - Use this mainly for clamping values that are about to change.
    // - The getters were created in the Macros defined at the top of the .h
 
-	// Handle scaling values to new maximum
+	Super::PreAttributeChange(Attribute, NewValue);
+
+	// Handle scaling values to new maximum. 
+	// If a Max value changes, adjust current to keep Current % of Current to Max.
 	if (Attribute == GetMaxHealthAttribute()) 
 	{
 		AdjustAttributeOnMaxChange(Health, MaxHealth, NewValue, GetHealthAttribute());
