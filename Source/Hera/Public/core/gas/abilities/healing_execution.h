@@ -4,18 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameplayEffectExecutionCalculation.h"
-#include "damage_execution.generated.h"
+#include "healing_execution.generated.h"
 
-/// Add to a GameplayEffect's Executions > Calculation Class
-/// ExecutionCalculations can only be used with Instant and Periodic GameplayEffects and they can not be predicted.
 /// For Local Predicted, Server Only, and Server Initiated GameplayAbilities, the Execution only calls on the Server.
 UCLASS()
-class HERA_API UDamageExecution : public UGameplayEffectExecutionCalculation
+class HERA_API UHealingExecution : public UGameplayEffectExecutionCalculation
 {
 	GENERATED_BODY()
 	
 public:
-	UDamageExecution();
+	UHealingExecution();
 
 	virtual void Execute_Implementation(
 		const FGameplayEffectCustomExecutionParameters& ExecutionParams, 

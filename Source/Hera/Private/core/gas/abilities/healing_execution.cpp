@@ -1,0 +1,91 @@
+// Copyright Final Fall Games. All Rights Reserved.
+
+#include "core/gas/abilities/healing_execution.h"
+#include "core/gas/life_attribute_set.h"
+#include "core/gas/hero_asc.h"
+
+// Declare the attributes to capture and define how we want to capture them from the Source and Target.
+struct HealingCapture
+{
+	DECLARE_ATTRIBUTE_CAPTUREDEF(Healing);
+
+	HealingCapture()
+	{
+		DEFINE_ATTRIBUTE_CAPTUREDEF(ULifeAttributeSet, Healing, Source, true);
+	}
+};
+
+static const HealingCapture& GetHealingCapture()
+{
+	static HealingCapture HEALING_CAPTURE;
+	return HEALING_CAPTURE;
+}
+
+UHealingExecution::UHealingExecution()
+{
+	CritMultiplier = 2.0f;
+
+	RelevantAttributesToCapture.Add(GetHealingCapture().HealingDef);
+}
+
+void UHealingExecution::Execute_Implementation(
+	const FGameplayEffectCustomExecutionParameters& ExecutionParams, 
+	OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput
+) const
+{
+	auto TargetASC = ExecutionParams.GetTargetAbilitySystemComponent();
+	auto SourceASC = ExecutionParams.GetSourceAbilitySystemComponent();
+	auto TargetAvatar = TargetASC ? TargetASC->GetAvatarActor() : nullptr;
+	auto SourceAvatar = SourceASC ? SourceASC->GetAvatarActor() : nullptr;
+
+	const FGameplayEffectSpec& EffectSpec = ExecutionParams.GetOwningSpec();
+	FGameplayTagContainer AssetTags;
+	EffectSpec.GetAllAssetTags(AssetTags);
+
+	// Gather the tags from the source and target as that can affect which buffs should be used
+	const auto SourceTags = EffectSpec.CapturedSourceTags.GetAggregatedTags();
+	const auto TargetTags = EffectSpec.CapturedTargetTags.GetAggregatedTags();
+
+	FAggregatorEvaluateParameters EvaluationParameters;
+	EvaluationParameters.SourceTags = SourceTags;
+	EvaluationParameters.TargetTags = TargetTags;
+
+	auto Healing = 0.0f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(
+		GetHealingCapture().HealingDef, 
+		EvaluationParameters, 
+		Healing
+	);
+	// Add SetByCaller Healing if it exists
+	// Healing += FMath::Max<float>(
+	// 	// DataName, WarnIfNotFound, DefaultIfNotFound
+	// 	EffectSpec.GetSetByCallerMagnitude(
+	// 		FGameplayTag::RequestGameplayTag(FName("Data.Healing")), 
+	// 		false, 
+	// 		-1.0f
+	// 	), 
+	// 	0.0f
+	// );
+
+	// Can multiply any Healing boosters here
+	float UnmitigatedHealing = Healing; 
+	
+	const float HealingMitigated = 0;
+	const float FinalHealing = UnmitigatedHealing - HealingMitigated;
+
+	if (FinalHealing > 0.f)
+	{
+		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(
+			GetHealingCapture().HealingProperty, 
+			EGameplayModOp::Additive, 
+			FinalHealing
+		));
+
+		// Broadcast to the Target's ASC
+		if (const auto TargetHeroASC = Cast<UHeroAbilitySystemComponent>(TargetASC))
+		{
+			const auto SourceHeroASC = Cast<UHeroAbilitySystemComponent>(SourceASC);
+			TargetHeroASC->OnReceivedHealing(SourceHeroASC, UnmitigatedHealing, FinalHealing);
+		}
+	}
+}

@@ -99,6 +99,11 @@ public:
 	FGameplayAttributeData OverArmor;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, OverArmor);
 
+	/// TODO: Ultimate aatributes
+	//  - UltimateChargeMax
+	//  - UltimateCharge
+	//  - UltimateOutOfCombatDecayRate?
+
 	//------------------------------------------------------------------------------------------------------------------
 	/// MARK: - BaseStat / EffortStat Attributes
 	//------------------------------------------------------------------------------------------------------------------

@@ -170,7 +170,8 @@ float ACharacterBase::GetOverArmor() const
 
 bool ACharacterBase::IsAlive() const
 {
-	return GetHealth() > 0;
+	// We check againtst the floor because that's what the UI will be showing.
+	return FMath::Floor(GetHealth()) > 0;
 }
 
 float ACharacterBase::GetMoveSpeed() const

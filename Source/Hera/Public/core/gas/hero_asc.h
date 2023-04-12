@@ -15,6 +15,13 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
 	/*param 3*/float, FinalDamage
 );
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+	FHealingReceivedDelegate, 
+	/*param 1*/UHeroAbilitySystemComponent*, SourceASC, 
+	/*param 2*/float, UnmitigatedHealing, 
+	/*param 3*/float, FinalHealing
+);
+
 UCLASS()
 class HERA_API UHeroAbilitySystemComponent : public UAbilitySystemComponent
 {
@@ -27,10 +34,20 @@ public:
 	/// Broadcasts whenever the ASC receives damage.
 	FDamageReceivedDelegate DamageReceivedDelegate;
 
-	/// Called from UDamageExecCalc. Broadcasts to DamageReceivedDelegate whenever this ASC receives damage.
+	/// Broadcasts whenever the ASC receives healing.
+	FHealingReceivedDelegate HealingReceivedDelegate;
+
+	/// Called from UDamageExecute. Broadcasts to DamageReceivedDelegate whenever this ASC receives damage.
 	virtual void OnReceivedDamage(
 		UHeroAbilitySystemComponent* SourceASC, 
 		float UnmitigatedDamage, 
 		float FinalDamage
+	);
+
+	/// Called from UHealingExecution. Broadcasts to DamageReceivedDelegate whenever this ASC receives damage.
+	virtual void OnReceivedHealing(
+		UHeroAbilitySystemComponent* SourceASC, 
+		float UnmitigatedHealing, 
+		float FinalHealing
 	);
 };

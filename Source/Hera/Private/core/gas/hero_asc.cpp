@@ -11,3 +11,12 @@ void UHeroAbilitySystemComponent::OnReceivedDamage(
 {
 	DamageReceivedDelegate.Broadcast(SourceASC, UnmitigatedDamage, FinalDamage);
 }
+
+void UHeroAbilitySystemComponent::OnReceivedHealing(
+   UHeroAbilitySystemComponent* SourceASC, 
+   float UnmitigatedHealing, 
+   float FinalHealing
+)
+{
+	HealingReceivedDelegate.Broadcast(SourceASC, UnmitigatedHealing, FinalHealing);
+}

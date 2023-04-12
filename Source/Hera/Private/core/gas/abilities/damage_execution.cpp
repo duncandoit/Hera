@@ -5,7 +5,7 @@
 #include "core/gas/hero_asc.h"
 
 // Declare the attributes to capture and define how we want to capture them from the Source and Target.
-struct DamageStatics
+struct DamageCapture
 {
 	// Capturing Attributes:
 	// The attributes captured should be things that will affect the outcome of the calculation but
@@ -15,7 +15,7 @@ struct DamageStatics
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Armor);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(OverArmor);
 
-	DamageStatics()
+	DamageCapture()
 	{
 		// Note: On Snapshotting
 		//Snapshotting captures the Attribute when the GameplayEffectSpec is created whereas not snapshotting 
@@ -35,19 +35,19 @@ struct DamageStatics
 	}
 };
 
-static const DamageStatics& gkDamageStatics()
+static const DamageCapture& GetDamageCapture()
 {
-	static DamageStatics DAMAGE_STATICS;
-	return DAMAGE_STATICS;
+	static DamageCapture DAMAGE_CAPTURE;
+	return DAMAGE_CAPTURE;
 }
 
 UDamageExecution::UDamageExecution()
 {
 	CritMultiplier = 2.0f;
 
-	RelevantAttributesToCapture.Add(gkDamageStatics().DamageDef);
-	RelevantAttributesToCapture.Add(gkDamageStatics().ArmorDef);
-	RelevantAttributesToCapture.Add(gkDamageStatics().OverArmorDef);
+	RelevantAttributesToCapture.Add(GetDamageCapture().DamageDef);
+	RelevantAttributesToCapture.Add(GetDamageCapture().ArmorDef);
+	RelevantAttributesToCapture.Add(GetDamageCapture().OverArmorDef);
 }
 
 void UDamageExecution::Execute_Implementation(
@@ -55,8 +55,6 @@ void UDamageExecution::Execute_Implementation(
 	OUT FGameplayEffectCustomExecutionOutput& OutExecutionOutput
 ) const
 {
-	
-
 	auto TargetASC = ExecutionParams.GetTargetAbilitySystemComponent();
 	auto SourceASC = ExecutionParams.GetSourceAbilitySystemComponent();
 	auto TargetAvatar = TargetASC ? TargetASC->GetAvatarActor() : nullptr;
@@ -76,7 +74,7 @@ void UDamageExecution::Execute_Implementation(
 
 	auto Armor = 0.0f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(
-		gkDamageStatics().ArmorDef, 
+		GetDamageCapture().ArmorDef, 
 		EvaluationParameters, 
 		Armor
 	);
@@ -84,7 +82,7 @@ void UDamageExecution::Execute_Implementation(
 
 	auto OverArmor = 0.0f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(
-		gkDamageStatics().OverArmorDef, 
+		GetDamageCapture().OverArmorDef, 
 		EvaluationParameters, 
 		OverArmor
 	);
@@ -93,7 +91,7 @@ void UDamageExecution::Execute_Implementation(
 	auto Damage = 0.0f;
 	// Capture optional damage value set on the damage GE as a CalculationModifier under the ExecutionCalculation
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(
-		gkDamageStatics().DamageDef, 
+		GetDamageCapture().DamageDef, 
 		EvaluationParameters, 
 		Damage
 	);
@@ -130,7 +128,7 @@ void UDamageExecution::Execute_Implementation(
 	{
 		// Set the Target's damage meta attribute
 		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(
-			gkDamageStatics().DamageProperty, 
+			GetDamageCapture().DamageProperty, 
 			EGameplayModOp::Additive, 
 			FinalDamage
 		));

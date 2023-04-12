@@ -21,7 +21,7 @@ void ULifeAttributeSet::HandleDamage(const float DamageReceived /*, SourceCharac
 	//       - Weakened       : Takes more damage
 	//       - Fortified      : Takes less damage
 
-	if (!(DamageReceived > 0)) { 
+	if (!(DamageReceived > 0)) {
 		return;
 	}
 
@@ -45,8 +45,6 @@ void ULifeAttributeSet::HandleDamage(const float DamageReceived /*, SourceCharac
 	if (OldOverArmor > 0.0f)
 	{
 		SetOverArmor(DamagedValue(OldOverArmor));
-
-
 	}
 	
 	// OverHealth
@@ -79,7 +77,7 @@ void ULifeAttributeSet::HandleHealing(const float HealingReceived)
 	// TODO: Check for GameplayTags like:
 	//       - Cursed : Can't receive healing
 
-	if (!(HealingReceived > 0)) { 
+	if (!(HealingReceived > 0)) {
 		return;
 	}
 
