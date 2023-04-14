@@ -31,7 +31,7 @@ class ACharacterBase : public ACharacter, public IAbilitySystemInterface
 	UPROPERTY(
 		VisibleAnywhere, BlueprintReadOnly, Category="Hera|Character|AbilitySystem", 
 		meta = (AllowPrivateAccess = "true"))
-	class UHeroAbilitySystemComponent* AbilitySystemComponent;
+	class UHeroAbilitySystemComponent* ASC;
 
 	UPROPERTY(
 		BlueprintReadWrite, Category="Hera|Character|Attributes", 

@@ -57,9 +57,9 @@ ACharacterBase::ACharacterBase()
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
-	ACharacterBase::AbilitySystemComponent = CreateDefaultSubobject<UHeroAbilitySystemComponent>("AbilitySystemComponent");
-	ACharacterBase::AbilitySystemComponent->SetIsReplicated(true);
-	ACharacterBase::AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+	ASC = CreateDefaultSubobject<UHeroAbilitySystemComponent>("AbilitySystemComponent");
+	ASC->SetIsReplicated(true);
+	ASC->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
 	// Initializing the AttributeSet in the Owner Actor's constructor automatically registers
 	// it with the ASC
@@ -220,24 +220,24 @@ float ACharacterBase::GetRewardXP() const
 
 class UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 {
-	return AbilitySystemComponent;
+	return ASC;
 }
 
 void ACharacterBase::InitializeAttributes()
 {
-	if (ACharacterBase::AbilitySystemComponent && DefaultAttributeEffect)
+	if (ASC && DefaultAttributeEffect)
 	{
-		FGameplayEffectContextHandle EffectContext = ACharacterBase::AbilitySystemComponent->MakeEffectContext();
+		FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
 		EffectContext.AddSourceObject(this);
 
-		FGameplayEffectSpecHandle SpecHandle = ACharacterBase::AbilitySystemComponent->MakeOutgoingSpec(
-			DefaultAttributeEffect,	// GameplayEffect class
-			1, 							// Level
-			EffectContext				// Context
+		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(
+			DefaultAttributeEffect, // GameplayEffect class
+			1,                      // Level
+			EffectContext           // Context
 		);
 		if (SpecHandle.IsValid())
 		{
-			auto EffectHandle = ACharacterBase::AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
+			auto EffectHandle = ASC->ApplyGameplayEffectSpecToSelf(
 				*SpecHandle.Data.Get() // GameplayEffect
 			);
 		}
@@ -246,18 +246,16 @@ void ACharacterBase::InitializeAttributes()
 
 void ACharacterBase::GiveAbilities() 
 {
-	if (HasAuthority() && ACharacterBase::AbilitySystemComponent)
+	if (HasAuthority() && ASC)
 	{
 		for (TSubclassOf<UAbilityBase>& Ability : DefaultAbilities)
 		{
-			ACharacterBase::AbilitySystemComponent->GiveAbility(
-				FGameplayAbilitySpec(
-					Ability, 
-					1, 
-					static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID), 
-					this
-				)
-			);
+			ASC->GiveAbility(FGameplayAbilitySpec(
+				Ability, 
+				1, 
+				static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID), 
+				this
+			));
 		}
 	}
 }
@@ -267,7 +265,7 @@ void ACharacterBase::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 	
 	// Server GAS init
-	ACharacterBase::AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
+	ASC->InitAbilityActorInfo(this, this); // (Avatar, Owner)
 	InitializeAttributes();
 	GiveAbilities();
 }
@@ -277,7 +275,7 @@ void ACharacterBase::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	// Client GAS init
-	ACharacterBase::AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
+	ASC->InitAbilityActorInfo(this, this); // (Avatar, Owner)
 	InitializeAttributes();
 	AssignInputBindings();
 }
@@ -288,9 +286,9 @@ void ACharacterBase::OnRep_PlayerState()
 
 void ACharacterBase::AssignInputBindings() 
 {
-	if (ACharacterBase::AbilitySystemComponent && InputComponent)
+	if (ASC && InputComponent)
 	{
-		const FGameplayAbilityInputBinds Bindings = FGameplayAbilityInputBinds(
+		const auto Bindings = FGameplayAbilityInputBinds(
 			// Confirm and Cancel are special bindings and are required to be explicitly named here
 			"Confirm", 
 			"Cancel", 
@@ -302,7 +300,7 @@ void ACharacterBase::AssignInputBindings()
 			static_cast<int32>(EAbilityInputID::Confirm), 
 			static_cast<int32>(EAbilityInputID::Cancel)
 		);
-		ACharacterBase::AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Bindings);
+		ASC->BindAbilityActivationToInputComponent(InputComponent, Bindings);
 	}
 }
 
@@ -329,7 +327,7 @@ void ACharacterBase::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 void ACharacterBase::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	auto MovementVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
 	{
