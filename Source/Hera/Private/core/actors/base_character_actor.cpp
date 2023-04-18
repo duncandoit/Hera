@@ -4,7 +4,7 @@
 #include "core/actors/projectile_actor.h"
 #include "core/gas/life_attribute_set.h"
 #include "core/gas/abilities/base_ability.h"
-#include "core/gas/hero_asc.h"
+#include "core/gas/base_asc.h"
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -15,7 +15,7 @@
 #include <GameplayEffectTypes.h>
 
 //---------------------------------------------------------------------------------------------------------------------
-/// MARK: - ACharacterBase
+/// MARK: - Character
 //---------------------------------------------------------------------------------------------------------------------
 
 ACharacterBase::ACharacterBase()
@@ -57,12 +57,12 @@ ACharacterBase::ACharacterBase()
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
-	ASC = CreateDefaultSubobject<UHeroAbilitySystemComponent>("AbilitySystemComponent");
-	ASC->SetIsReplicated(true);
-	ASC->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponentBase>("AbilitySystemComponent");
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
 	// Initializing the AttributeSet in the Owner Actor's constructor automatically registers
-	// it with the ASC
+	// it with the AbilitySystemComponent
 	LifeAttributes = CreateDefaultSubobject<ULifeAttributeSet>("LifeAttributeSet");
 }
 
@@ -220,24 +220,24 @@ float ACharacterBase::GetRewardXP() const
 
 class UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 {
-	return ASC;
+	return AbilitySystemComponent;
 }
 
 void ACharacterBase::InitializeAttributes()
 {
-	if (ASC && DefaultAttributeEffect)
+	if (AbilitySystemComponent && DefaultAttributeEffect)
 	{
-		FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
 		EffectContext.AddSourceObject(this);
 
-		FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(
+		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(
 			DefaultAttributeEffect, // GameplayEffect class
 			1,                      // Level
 			EffectContext           // Context
 		);
 		if (SpecHandle.IsValid())
 		{
-			auto EffectHandle = ASC->ApplyGameplayEffectSpecToSelf(
+			auto EffectHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
 				*SpecHandle.Data.Get() // GameplayEffect
 			);
 		}
@@ -246,11 +246,11 @@ void ACharacterBase::InitializeAttributes()
 
 void ACharacterBase::GiveAbilities() 
 {
-	if (HasAuthority() && ASC)
+	if (HasAuthority() && AbilitySystemComponent)
 	{
 		for (TSubclassOf<UAbilityBase>& Ability : DefaultAbilities)
 		{
-			ASC->GiveAbility(FGameplayAbilitySpec(
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(
 				Ability, 
 				1, 
 				static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID), 
@@ -265,7 +265,7 @@ void ACharacterBase::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 	
 	// Server GAS init
-	ASC->InitAbilityActorInfo(this, this); // (Avatar, Owner)
+	AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
 	InitializeAttributes();
 	GiveAbilities();
 }
@@ -275,7 +275,7 @@ void ACharacterBase::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	// Client GAS init
-	ASC->InitAbilityActorInfo(this, this); // (Avatar, Owner)
+	AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
 	InitializeAttributes();
 	AssignInputBindings();
 }
@@ -286,7 +286,7 @@ void ACharacterBase::OnRep_PlayerState()
 
 void ACharacterBase::AssignInputBindings() 
 {
-	if (ASC && InputComponent)
+	if (AbilitySystemComponent && InputComponent)
 	{
 		const auto Bindings = FGameplayAbilityInputBinds(
 			// Confirm and Cancel are special bindings and are required to be explicitly named here
@@ -300,7 +300,7 @@ void ACharacterBase::AssignInputBindings()
 			static_cast<int32>(EAbilityInputID::Confirm), 
 			static_cast<int32>(EAbilityInputID::Cancel)
 		);
-		ASC->BindAbilityActivationToInputComponent(InputComponent, Bindings);
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(InputComponent, Bindings);
 	}
 }
 

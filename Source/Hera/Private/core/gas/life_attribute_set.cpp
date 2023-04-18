@@ -74,7 +74,7 @@ void ULifeAttributeSet::HandleDamage(const float DamageReceived /*, SourceCharac
 
 void ULifeAttributeSet::HandleHealing(const float HealingReceived)
 {
-	// TODO: Check for GameplayTags like:
+	/// TODO: Check for GameplayTags like:
 	//       - Cursed : Can't receive healing
 
 	if (!(HealingReceived > 0)) {

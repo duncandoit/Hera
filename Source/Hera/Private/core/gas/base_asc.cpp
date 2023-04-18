@@ -1,10 +1,10 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
 
-#include "core/gas/hero_asc.h"
+#include "core/gas/base_asc.h"
 
-void UHeroAbilitySystemComponent::OnReceivedDamage(
-   UHeroAbilitySystemComponent* SourceASC, 
+void UAbilitySystemComponentBase::OnReceivedDamage(
+   UAbilitySystemComponentBase* SourceASC, 
    float UnmitigatedDamage, 
    float FinalDamage
 )
@@ -12,8 +12,8 @@ void UHeroAbilitySystemComponent::OnReceivedDamage(
 	DamageReceivedDelegate.Broadcast(SourceASC, UnmitigatedDamage, FinalDamage);
 }
 
-void UHeroAbilitySystemComponent::OnReceivedHealing(
-   UHeroAbilitySystemComponent* SourceASC, 
+void UAbilitySystemComponentBase::OnReceivedHealing(
+   UAbilitySystemComponentBase* SourceASC, 
    float UnmitigatedHealing, 
    float FinalHealing
 )

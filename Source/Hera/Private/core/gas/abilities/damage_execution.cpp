@@ -2,23 +2,28 @@
 
 #include "core/gas/abilities/damage_execution.h"
 #include "core/gas/life_attribute_set.h"
-#include "core/gas/hero_asc.h"
+#include "core/gas/base_asc.h"
 
 // Declare the attributes to capture and define how we want to capture them from the Source and Target.
-struct DamageCapture
+struct FDamageCapture
 {
 	// Capturing Attributes:
-	// The attributes captured should be things that will affect the outcome of the calculation but
-	// may change from moment to moment (like AttackPower, if it can be buffed by another ability, say)
+	// The attributes are captured with their BaseValue.
+	// They hould be things that will affect the outcome of the calculation but may change from moment to moment 
+	// (like AttackPower, if it can be buffed by another ability, say)
 	
+	// Source Attributes
+	// DECLARE_ATTRIBUTE_CAPTUREDEF(AbilityDamage);
+
+	// Target Attributes
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Damage);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Armor);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(OverArmor);
 
-	DamageCapture()
+	FDamageCapture()
 	{
-		// Note: On Snapshotting
-		//Snapshotting captures the Attribute when the GameplayEffectSpec is created whereas not snapshotting 
+		/// NOTE: On Snapshotting
+		// Snapshotting captures the Attribute when the GameplayEffectSpec is created whereas not snapshotting 
 		// captures the Attribute when the GameplayEffectSpec is applied. Capturing Attributes recalculates their 
 		// CurrentValue from existing mods on the ASC. This recalculation will not run PreAttributeChange() in the 
 		// AbilitySet so any clamping must be done here again.
@@ -35,10 +40,10 @@ struct DamageCapture
 	}
 };
 
-static const DamageCapture& GetDamageCapture()
+static const FDamageCapture& GetDamageCapture()
 {
-	static DamageCapture DAMAGE_CAPTURE;
-	return DAMAGE_CAPTURE;
+	static FDamageCapture DamageCapture;
+	return DamageCapture;
 }
 
 UDamageExecution::UDamageExecution()
@@ -72,7 +77,7 @@ void UDamageExecution::Execute_Implementation(
 	EvaluationParameters.SourceTags = SourceTags;
 	EvaluationParameters.TargetTags = TargetTags;
 
-	auto Armor = 0.0f;
+	float Armor = 0.0f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(
 		GetDamageCapture().ArmorDef, 
 		EvaluationParameters, 
@@ -80,7 +85,7 @@ void UDamageExecution::Execute_Implementation(
 	);
 	Armor = FMath::Max<float>(Armor, 0.0f);
 
-	auto OverArmor = 0.0f;
+	float OverArmor = 0.0f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(
 		GetDamageCapture().OverArmorDef, 
 		EvaluationParameters, 
@@ -88,23 +93,20 @@ void UDamageExecution::Execute_Implementation(
 	);
 	OverArmor = FMath::Max<float>(OverArmor, 0.0f);
 
-	auto Damage = 0.0f;
-	// Capture optional damage value set on the damage GE as a CalculationModifier under the ExecutionCalculation
+	// Grabs the value from the attribute set, goes through Effects and see if anything will change 
+	// the Damage attribute, and adds it to the Damage float.
+	// Value set on the damage GE as a CalculationModifier under the ExecutionCalculation.
+	float Damage = 0.0f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(
 		GetDamageCapture().DamageDef, 
 		EvaluationParameters, 
 		Damage
 	);
-	// Add SetByCaller damage if it exists
-	// Damage += FMath::Max<float>(
-	// 	// DataName, WarnIfNotFound, DefaultIfNotFound
-	// 	EffectSpec.GetSetByCallerMagnitude(
-	// 		FGameplayTag::RequestGameplayTag(FName("Data.Damage")), 
-	// 		false, 
-	// 		-1.0f
-	// 	), 
-	// 	0.0f
-	// );
+	
+	//Add SetByCaller damage if it exists
+	const auto SetByTag = FGameplayTag::RequestGameplayTag(FName("Effect.Damage.Instant"));
+	const float SetByDamage = EffectSpec.GetSetByCallerMagnitude(SetByTag, false, -1.0f); // tag, warn, default
+	Damage += FMath::Max<float>(SetByDamage, 0.0f);
 
 	// Can multiply any damage boosters here
 	float UnmitigatedDamage = Damage; 
@@ -133,11 +135,22 @@ void UDamageExecution::Execute_Implementation(
 			FinalDamage
 		));
 
+		// If we want to trigger conditional Effects when the execution is successful.
+		// OutExecutionOutput.MarkConditionalGameplayEffectsToTrigger();
+
+		// If we handle GameplayCues manually.
+		// disable the GE from firing its cues after the calculation
+		// OutExecutionOutput.MarkGameplayCuesHandledManually();
+
 		// Broadcast to the Target's ASC
-		if (const auto TargetHeroASC = Cast<UHeroAbilitySystemComponent>(TargetASC))
+		if (const auto TargetHeroASC = Cast<UAbilitySystemComponentBase>(TargetASC))
 		{
-			const auto SourceHeroASC = Cast<UHeroAbilitySystemComponent>(SourceASC);
+			const auto SourceHeroASC = Cast<UAbilitySystemComponentBase>(SourceASC);
 			TargetHeroASC->OnReceivedDamage(SourceHeroASC, UnmitigatedDamage, FinalDamage);
 		}
 	}
+
+	// If we handle the stack count manually.
+	// The GE system should not attempt to automatically act upon it for emitted modifiers.
+	// OutExecutionOutput.MarkStackCountHandledManually();
 }

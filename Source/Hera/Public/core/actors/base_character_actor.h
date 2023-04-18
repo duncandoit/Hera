@@ -7,10 +7,7 @@
 #include "InputActionValue.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
-// #include <GameplayEffectTypes.h>
 #include "base_character_actor.generated.h"
-
-class UHeroAbilitySystemComponent;
 
 class UInputComponent;
 class USkeletalMeshComponent;
@@ -26,12 +23,15 @@ class ACharacterBase : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
-	// MARK: - Gamplay Ability System
+	//------------------------------------------------------------------------------------------------------------------
+	/// MARK: - Gamplay Ability System
+	//------------------------------------------------------------------------------------------------------------------
 
+private:
 	UPROPERTY(
-		VisibleAnywhere, BlueprintReadOnly, Category="Hera|Character|AbilitySystem", 
+		VisibleAnywhere, BlueprintReadOnly, Category="Hera|Character", 
 		meta = (AllowPrivateAccess = "true"))
-	class UHeroAbilitySystemComponent* ASC;
+	class UAbilitySystemComponentBase* AbilitySystemComponent;
 
 	UPROPERTY(
 		BlueprintReadWrite, Category="Hera|Character|Attributes", 
@@ -49,50 +49,24 @@ class ACharacterBase : public ACharacter, public IAbilitySystemInterface
 
 	void AssignInputBindings();
 
-	// MARK: - Character
-
-	// Pawn mesh: 1st person view (arms; seen only by self)
-	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
-	TObjectPtr<USkeletalMeshComponent> Mesh1P;
-
-	// First person camera
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
-
-	// Third person camera
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCameraComponent> ThirdPersonCameraComponent;
-
-	// Third person camera spring arm
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USpringArmComponent> ThirdPersonCameraBoom;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	bool IsCameraChangeAllowed;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	bool bCameraIsChangingPov;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	bool bCameraIsFirstPerson;
-
-	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputMappingContext* DefaultMappingContext;
-
-	/** Move Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputAction* MoveAction;
-
-	/** Crouch Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputAction* CrouchAction;
-
-	
 public:
-	ACharacterBase();
+	// The Ability System uses this via the IAbilitySystemInterface. 
+	// It should return a reference to this OwningActor's AbilitySystemComponent 
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
-	// MARK: - Gamplay Ability System
+	virtual void InitializeAttributes();
+
+	// Grants the abilities set in the DefaultAbilities property to the Character when that
+	// that Character is possessed by a Controller.
+	// These abilities are usually set in the derived Blueprint 'Class Defaults' panel.
+	virtual void GiveAbilities();
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Hera|Character")
+	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+
+	// These abilities are usually set in the derived Blueprint 'Class Defaults' panel.
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Hera|Character")
+	TArray<TSubclassOf<class UAbilityBase>> DefaultAbilities;
 
 	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
 	float GetMaxHealth() const;
@@ -133,88 +107,120 @@ public:
 	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
 	float GetRewardXP() const;
 
-	// The Ability System uses this via the IAbilitySystemInterface. 
-	// It should return a reference to this OwningActor's ASC 
-	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	//------------------------------------------------------------------------------------------------------------------
+	/// MARK: - Character
+	//------------------------------------------------------------------------------------------------------------------
 
-	virtual void InitializeAttributes();
+private:
+	// Pawn mesh: 1st person view (arms; seen only by self)
+	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
+	TObjectPtr<USkeletalMeshComponent> Mesh1P;
 
-	// Grants the abilities set in the DefaultAbilities property to the Character when that
-	// that Character is possessed by a Controller.
-	// These abilities are usually set in the derived Blueprint 'Class Defaults' panel.
-	virtual void GiveAbilities();
+	// First person camera
+	UPROPERTY(
+		VisibleAnywhere, BlueprintReadWrite, Category ="Hera|Character|Camera", 
+		meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCameraComponent> FirstPersonCameraComponent;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Hera|Character|Base")
-	TSubclassOf<class UGameplayEffect> DefaultAttributeEffect;
+	// Third person camera
+	UPROPERTY(
+		VisibleAnywhere, BlueprintReadOnly, Category ="Hera|Character|Camera", 
+		meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCameraComponent> ThirdPersonCameraComponent;
 
-	// These abilities are usually set in the derived Blueprint 'Class Defaults' panel.
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Hera|Character|Base")
-	TArray<TSubclassOf<class UAbilityBase>> DefaultAbilities;
+	// Third person camera spring arm
+	UPROPERTY(
+		VisibleAnywhere, BlueprintReadOnly, Category ="Hera|Character|Camera", 
+		meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USpringArmComponent> ThirdPersonCameraBoom;
 
-	// MARK: - Character
+	UPROPERTY(
+		VisibleAnywhere, BlueprintReadOnly, Category ="Hera|Character|Camera", 
+		meta = (AllowPrivateAccess = "true"))
+	bool IsCameraChangeAllowed;
 
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(
+		VisibleAnywhere, BlueprintReadOnly, Category ="Hera|Character|Camera", 
+		meta = (AllowPrivateAccess = "true"))
+	bool bCameraIsChangingPov;
+
+	UPROPERTY(
+		VisibleAnywhere, BlueprintReadOnly, Category ="Hera|Character|Camera", 
+		meta = (AllowPrivateAccess = "true"))
+	bool bCameraIsFirstPerson;
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadOnly, Category ="Hera|Character|Input", 
+		meta=(AllowPrivateAccess = "true"))
+	class UInputMappingContext* DefaultMappingContext;
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadOnly, Category ="Hera|Character|Input", 
+		meta=(AllowPrivateAccess = "true"))
+	class UInputAction* MoveAction;
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadOnly, Category ="Hera|Character|Input", 
+		meta=(AllowPrivateAccess = "true"))
+	class UInputAction* CrouchAction;
+
+public:
+	ACharacterBase();
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadOnly, Category ="Hera|Character|Input", 
+		meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
 
-	/** Bool for AnimBP to switch to another animation set */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
+	// Bool for AnimBP to switch to another animation set
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category ="Hera|Character|Weapon")
 	bool bHasRifle;
 
-	/** Setter to set the bool */
-	UFUNCTION(BlueprintCallable, Category = Weapon)
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Weapon")
 	void SetHasRifle(bool bNewHasRifle);
 
-	/** Getter for the bool */
-	UFUNCTION(BlueprintCallable, Category = Weapon)
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Weapon")
 	bool GetHasRifle();
 
-	/** Setter to set the bool */
-	UFUNCTION(BlueprintCallable, Category = Camera)
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
 	void SetCameraIsChangingPov(bool bNewIsChanging);
 
-	/** Getter for the bool */
-	UFUNCTION(BlueprintCallable, Category = Camera)
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
 	bool GetCameraIsChangingPov();
 
-	/** Returns FirstPersonCameraComponent subobject **/
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
+	void SetCameraToFPV();
+
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
+	void SetCameraToTPV();
+
 	UCameraComponent* GetFirstPersonCameraComponent() const { 
 		return FirstPersonCameraComponent;
 	}
 	
-	/** Returns ThirdPersonCameraComponent subobject **/
 	UCameraComponent* GetThirdPersonCameraComponent() const { 
 		return ThirdPersonCameraComponent;
 	}
 
-	UFUNCTION(BlueprintCallable, Category = Camera)
-	void SetCameraToFPV();
-
-	UFUNCTION(BlueprintCallable, Category = Camera)
-	void SetCameraToTPV();
-
-	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-
 
 protected:
 	virtual void BeginPlay();
 
-	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
-	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	/** Called for Crouch input */
-	UFUNCTION(BlueprintCallable, Category=Character)
+	UFUNCTION(BlueprintCallable, Category="Hera|Character|Input")
 	void Duck(const FInputActionValue& Value);
 
-	/** Called for Crouch input */
-	UFUNCTION(BlueprintCallable, Category=Character)
+	UFUNCTION(BlueprintCallable, Category="Hera|Character|Input")
 	void UnDuck(const FInputActionValue& Value);
 
-	// MARK: - APawn interface
+	//------------------------------------------------------------------------------------------------------------------
+	/// MARK: - APawn interface
+	//------------------------------------------------------------------------------------------------------------------
 
+protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 };

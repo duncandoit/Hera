@@ -2,23 +2,23 @@
 
 #include "core/gas/abilities/healing_execution.h"
 #include "core/gas/life_attribute_set.h"
-#include "core/gas/hero_asc.h"
+#include "core/gas/base_asc.h"
 
 // Declare the attributes to capture and define how we want to capture them from the Source and Target.
-struct HealingCapture
+struct FHealingCapture
 {
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Healing);
 
-	HealingCapture()
+	FHealingCapture()
 	{
 		DEFINE_ATTRIBUTE_CAPTUREDEF(ULifeAttributeSet, Healing, Source, true);
 	}
 };
 
-static const HealingCapture& GetHealingCapture()
+static const FHealingCapture& GetHealingCapture()
 {
-	static HealingCapture HEALING_CAPTURE;
-	return HEALING_CAPTURE;
+	static FHealingCapture HealingCapture;
+	return HealingCapture;
 }
 
 UHealingExecution::UHealingExecution()
@@ -82,9 +82,9 @@ void UHealingExecution::Execute_Implementation(
 		));
 
 		// Broadcast to the Target's ASC
-		if (const auto TargetHeroASC = Cast<UHeroAbilitySystemComponent>(TargetASC))
+		if (const auto TargetHeroASC = Cast<UAbilitySystemComponentBase>(TargetASC))
 		{
-			const auto SourceHeroASC = Cast<UHeroAbilitySystemComponent>(SourceASC);
+			const auto SourceHeroASC = Cast<UAbilitySystemComponentBase>(SourceASC);
 			TargetHeroASC->OnReceivedHealing(SourceHeroASC, UnmitigatedHealing, FinalHealing);
 		}
 	}
