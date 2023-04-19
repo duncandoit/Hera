@@ -19,7 +19,7 @@ class USoundBase;
 class UAbilityBase;
 
 UCLASS(config=Game)
-class ACharacterBase : public ACharacter, public IAbilitySystemInterface
+class HERA_API ACharacterBase : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
