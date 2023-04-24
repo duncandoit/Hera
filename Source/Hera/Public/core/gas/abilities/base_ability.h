@@ -7,6 +7,11 @@
 #include "Hera.h"
 #include "base_ability.generated.h"
 
+/// TODO: Zach - 4/24/23
+// - Decide how to deal with communicating character changes with abilities.
+//   -- Set GameplayTags on the ASC?
+//   -- Make standard callback Events on the base_ability for things like OnAvatarLanded, etc.
+
 UCLASS()
 class HERA_API UAbilityBase : public UGameplayAbility
 {

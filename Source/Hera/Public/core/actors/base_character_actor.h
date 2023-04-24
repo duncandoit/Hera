@@ -194,13 +194,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
 	void SetCameraToTPV();
 
-	UCameraComponent* GetFirstPersonCameraComponent() const { 
-		return FirstPersonCameraComponent;
-	}
+	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 	
-	UCameraComponent* GetThirdPersonCameraComponent() const { 
-		return ThirdPersonCameraComponent;
-	}
+	UCameraComponent* GetThirdPersonCameraComponent() const { return ThirdPersonCameraComponent; }
 
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 
@@ -216,6 +212,27 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Hera|Character|Input")
 	void UnDuck(const FInputActionValue& Value);
+
+	//------------------------------------------------------------------------------------------------------------------
+	/// MARK: - UI
+	//------------------------------------------------------------------------------------------------------------------
+
+public:
+	/// The healthbar that floats over characters' heads
+	class UHealthbarWidget* GetFloatingHealthbar();
+
+protected:
+	UFUNCTION()
+	void InitializeFloatingHealthbar();
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Hera|UI")
+	TSubclassOf<class UHealthbarWidget> HealthbarWidgetClass;
+
+	UPROPERTY()
+	class UHealthbarWidget* FloatingHealthbarWidget;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Hera|UI")
+	class UWidgetComponent* FloatingHealthbarComponent;
 
 	//------------------------------------------------------------------------------------------------------------------
 	/// MARK: - APawn interface
