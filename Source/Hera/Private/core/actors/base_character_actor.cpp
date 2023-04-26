@@ -116,6 +116,7 @@ void ACharacterBase::BeginPlay()
 	}
 }
 
+// Server-only
 void ACharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
@@ -133,6 +134,7 @@ void ACharacterBase::PossessedBy(AController* NewController)
 	}
 }
 
+// Client-only
 void ACharacterBase::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
