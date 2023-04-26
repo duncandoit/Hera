@@ -21,17 +21,17 @@ public:
 	UAbilityBase();
 
 	/// Abilities with this set will automatically activate when the input is pressed
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Hera|Ability|Base")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Hera|Ability")
 	EAbilityInputID AbilityInputID = EAbilityInputID::None;
 
 	/// Value to associate an ability with an slot without tying it to an automatically activated input.
 	/// Passive abilities won't be tied to an input so we need a way to generically associate abilities with slots.
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Hera|Ability|Base")
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Hera|Ability")
 	EAbilityInputID AbilityID = EAbilityInputID::None;
 
 	/// Tells an ability to activate immediately when its granted. Used for passive abilities and abilities 
 	/// forced on others.
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Hera|Ability|Base")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Hera|Ability")
 	bool ActivateAbilityOnGranted = false;
 
 	/// If an ability is marked as 'ActivateAbilityOnGranted', activate them immediately when given here

@@ -6,6 +6,7 @@
 #include "core/gas/abilities/base_ability.h"
 #include "core/ui/healthbar_widget.h"
 #include "core/gas/base_asc.h"
+#include "core/gas/tags.h"
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -16,6 +17,7 @@
 #include "EnhancedInputSubsystems.h"
 #include <GameplayEffectTypes.h>
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 /// MARK: - Character
@@ -143,6 +145,25 @@ void ACharacterBase::OnRep_PlayerState()
 	// Simulated on proxies don't have their PlayerStates yet when 
 	// BeginPlay is called so we call it again here
 	InitializeFloatingHealthbar();
+}
+
+void ACharacterBase::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	//AbilitySystemComponent->ApplyGameplayTag(HeraTags::Tag_Landed);
+	AbilitySystemComponent->AddReplicatedLooseGameplayTag(HeraTags::Tag_Landed);
+}
+
+void ACharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+
+	const auto NewMode = GetCharacterMovement()->MovementMode;
+	if (NewMode == EMovementMode::MOVE_Falling)
+	{
+		AbilitySystemComponent->RemoveReplicatedLooseGameplayTag(HeraTags::Tag_Landed);
+	}
 }
 
 //---------------------------------------------------------------------------------------------------------------------

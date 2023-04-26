@@ -3,6 +3,7 @@
 #include "core/gas/abilities/damage_execution.h"
 #include "core/gas/life_attribute_set.h"
 #include "core/gas/base_asc.h"
+#include "core/gas/tags.h"
 
 // Declare the attributes to capture and define how we want to capture them from the Source and Target.
 struct FDamageCapture
@@ -104,7 +105,7 @@ void UDamageExecution::Execute_Implementation(
 	);
 	
 	//Add SetByCaller damage if it exists
-	const auto SetByTag = FGameplayTag::RequestGameplayTag(FName("Effect.Damage.Instant"));
+	const auto SetByTag = HeraTags::Tag_Damage;
 	const float SetByDamage = EffectSpec.GetSetByCallerMagnitude(SetByTag, false, -1.0f); // tag, warn, default
 	Damage += FMath::Max<float>(SetByDamage, 0.0f);
 

@@ -3,6 +3,7 @@
 #include "core/gas/abilities/healing_execution.h"
 #include "core/gas/life_attribute_set.h"
 #include "core/gas/base_asc.h"
+#include "core/gas/tags.h"
 
 // Declare the attributes to capture and define how we want to capture them from the Source and Target.
 struct FHealingCapture
@@ -57,15 +58,15 @@ void UHealingExecution::Execute_Implementation(
 		Healing
 	);
 	// Add SetByCaller Healing if it exists
-	// Healing += FMath::Max<float>(
-	// 	// DataName, WarnIfNotFound, DefaultIfNotFound
-	// 	EffectSpec.GetSetByCallerMagnitude(
-	// 		FGameplayTag::RequestGameplayTag(FName("Data.Healing")), 
-	// 		false, 
-	// 		-1.0f
-	// 	), 
-	// 	0.0f
-	// );
+	Healing += FMath::Max<float>(
+		// DataName, WarnIfNotFound, DefaultIfNotFound
+		EffectSpec.GetSetByCallerMagnitude(
+			HeraTags::Tag_Healing, 
+			false, 
+			-1.0f
+		), 
+		0.0f
+	);
 
 	// Can multiply any Healing boosters here
 	float UnmitigatedHealing = Healing; 
