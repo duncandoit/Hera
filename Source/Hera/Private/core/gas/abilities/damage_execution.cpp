@@ -105,9 +105,10 @@ void UDamageExecution::Execute_Implementation(
 	);
 	
 	//Add SetByCaller damage if it exists
-	const auto SetByTag = HeraTags::Tag_Damage;
-	const float SetByDamage = EffectSpec.GetSetByCallerMagnitude(SetByTag, false, -1.0f); // tag, warn, default
-	Damage += FMath::Max<float>(SetByDamage, 0.0f);
+	Damage += FMath::Max<float>(
+		EffectSpec.GetSetByCallerMagnitude(HeraTags::Tag_Damage, false, -1.0f), // tag, warn, default
+		0.0f
+	);
 
 	// Can multiply any damage boosters here
 	float UnmitigatedDamage = Damage; 

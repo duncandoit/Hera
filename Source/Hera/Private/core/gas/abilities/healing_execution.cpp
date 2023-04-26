@@ -59,12 +59,7 @@ void UHealingExecution::Execute_Implementation(
 	);
 	// Add SetByCaller Healing if it exists
 	Healing += FMath::Max<float>(
-		// DataName, WarnIfNotFound, DefaultIfNotFound
-		EffectSpec.GetSetByCallerMagnitude(
-			HeraTags::Tag_Healing, 
-			false, 
-			-1.0f
-		), 
+		EffectSpec.GetSetByCallerMagnitude(HeraTags::Tag_Healing, false, -1.0f), // tag, warn, default
 		0.0f
 	);
 
