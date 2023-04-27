@@ -10,7 +10,20 @@
 		}
 	],
 	"settings": {
-		"typescript.tsc.autoDetect": "off"
+		"typescript.tsc.autoDetect": "off",
+		"files.associations": {
+			"memory": "cpp",
+			"type_traits": "cpp",
+			"vector": "cpp",
+			"tuple": "cpp",
+			"atomic": "cpp",
+			"initializer_list": "cpp",
+			"limits": "cpp",
+			"new": "cpp",
+			"sstream": "cpp",
+			"string": "cpp",
+			"ostream": "cpp"
+		}
 	},
 	"extensions": {
 		"recommendations": [

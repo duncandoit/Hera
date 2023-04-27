@@ -149,6 +149,7 @@ public:
 	
 	UCameraComponent* GetThirdPersonCameraComponent() const { return ThirdPersonCameraComponent; }
 
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character")
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 
 private:

@@ -4,9 +4,12 @@
 #include "core/actors/projectile_actor.h"
 #include "core/gas/life_attribute_set.h"
 #include "core/gas/abilities/base_ability.h"
-#include "core/ui/healthbar_widget.h"
 #include "core/gas/base_asc.h"
 #include "core/gas/tags.h"
+#include "core/ui/healthbar_widget.h"
+#include "core/base_player_controller.h"
+
+#include "core/debug_utils.h"
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -26,8 +29,8 @@
 ACharacterBase::ACharacterBase()
 	: IsCameraChangeAllowed(true)
 	, bCameraIsChangingPov(false)
-	, bCameraIsFirstPerson(true)
 	, bHasRifle(false)
+	, bCameraIsFirstPerson(true)
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
@@ -72,7 +75,7 @@ ACharacterBase::ACharacterBase()
 	HealthbarWidgetClass = StaticLoadClass(
 		UObject::StaticClass(), 
 		nullptr,
-		TEXT("/Game/Hera/UI/UMG_Healthbar")
+		TEXT("/Game/Hera/UI/UMG_Healthbar.UMG_Healthbar_C")
 	);
 	if (!HealthbarWidgetClass)
 	{
@@ -86,7 +89,7 @@ ACharacterBase::ACharacterBase()
 
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponentBase>("AbilitySystemComponent");
 	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	// Initializing the AttributeSet in the Owner Actor's constructor automatically registers
 	// it with the AbilitySystemComponent
@@ -95,8 +98,9 @@ ACharacterBase::ACharacterBase()
 
 void ACharacterBase::BeginPlay()
 {
-	// Call the base class  
 	Super::BeginPlay();
+
+	UHeraUtil::DebugPrint("ACharacterBase::BeginPlay()", FColor::Purple);
 
 	// Only needed for Heroes placed in world and when the player is the Server.
 	// On respawn, they are set up in PossessedBy.
@@ -120,6 +124,8 @@ void ACharacterBase::BeginPlay()
 void ACharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
+	UHeraUtil::DebugPrint("ACharacterBase::PossessedBy()", FColor::Purple);
 	
 	// Server GAS init
 	AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
@@ -138,6 +144,8 @@ void ACharacterBase::PossessedBy(AController* NewController)
 void ACharacterBase::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
+
+	UHeraUtil::DebugPrint("ACharacterBase::OnRep_PlayerState()", FColor::Purple);
 
 	// Client GAS init
 	AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
@@ -181,18 +189,19 @@ void ACharacterBase::InitializeAttributes()
 {
 	if (AbilitySystemComponent && DefaultAttributeEffect)
 	{
-		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-		EffectContext.AddSourceObject(this);
+		auto EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
+		EffectContextHandle.AddSourceObject(this);
 
-		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(
+		auto EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpec(
 			DefaultAttributeEffect, // GameplayEffect class
 			1,                      // Level
-			EffectContext           // Context
+			EffectContextHandle     // Context
 		);
-		if (SpecHandle.IsValid())
+
+		if (EffectSpecHandle.IsValid())
 		{
 			auto EffectHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
-				*SpecHandle.Data.Get() // GameplayEffect
+				*EffectSpecHandle.Data.Get() // GameplayEffect
 			);
 		}
 	}
@@ -210,6 +219,60 @@ void ACharacterBase::GiveAbilities()
 				static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID), 
 				this
 			));
+		}
+	}
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+/// MARK: - UI
+//---------------------------------------------------------------------------------------------------------------------
+
+UHealthbarWidget* ACharacterBase::GetFloatingHealthbar()
+{
+	return FloatingHealthbarWidget;
+}
+
+void ACharacterBase::InitializeFloatingHealthbar()
+{
+	UHeraUtil::DebugPrint("ACharacterBase::InitializeFloatingHealthbar()", FColor::Purple);
+	// Only create once
+	if (FloatingHealthbarWidget || !IsValid(AbilitySystemComponent))
+	{
+		return;
+	}
+
+	// Don't create for locally controlled player. We could add a game setting to toggle this later.
+	if (IsPlayerControlled() && IsLocallyControlled())
+	{
+		return;
+	}
+
+	// Need a valid PlayerState
+	// if (!GetPlayerState())
+	// {
+	// 	return;
+	// }
+
+	// Setup UI for Locally Owned Players only, not AI or the server's copy of the PlayerControllers
+	// auto Controller = Cast<APlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	// auto PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	auto PC = GetController<APlayerControllerBase>();
+	UE_LOG(LogTemp, Warning, TEXT("Zach - APlayerControllerBase: %p"), &PC);
+	if (PC && PC->IsLocalPlayerController())
+	{
+		UHeraUtil::DebugPrint("ACharacterBase::InitializeFloatingHealthbar() - Found PC", FColor::Purple);
+		
+		if (HealthbarWidgetClass)
+		{
+			// Creating a widget requires that the first arg be derived from one of the following:
+			// - UWidget, UWidgetTree, APlayerController, UGameInstance, UWorld
+			FloatingHealthbarWidget = CreateWidget<UHealthbarWidget>(PC, HealthbarWidgetClass);
+			if (FloatingHealthbarWidget && FloatingHealthbarComponent)
+			{
+				UHeraUtil::DebugPrint("ACharacterBase::InitializeFloatingHealthbar() - Widget is valid", FColor::Purple);
+				FloatingHealthbarComponent->SetWidget(FloatingHealthbarWidget);
+				FloatingHealthbarWidget->SetOwningCharacter(this);
+			}
 		}
 	}
 }
@@ -466,50 +529,4 @@ void ACharacterBase::SetCameraIsChangingPov(bool bNewIsChanging)
 bool ACharacterBase::GetCameraIsChangingPov()
 {
 	return bCameraIsChangingPov;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-/// MARK: - UI
-//---------------------------------------------------------------------------------------------------------------------
-
-UHealthbarWidget* ACharacterBase::GetFloatingHealthbar()
-{
-	return FloatingHealthbarWidget;
-}
-
-void ACharacterBase::InitializeFloatingHealthbar()
-{
-	// Only create once
-	if (FloatingHealthbarWidget || !IsValid(AbilitySystemComponent))
-	{
-		return;
-	}
-
-	// Don't create for locally controlled player. We could add a game setting to toggle this later.
-	if (IsPlayerControlled() && IsLocallyControlled())
-	{
-		return;
-	}
-
-	// Need a valid PlayerState
-	if (!GetPlayerState())
-	{
-		return;
-	}
-
-	// Setup UI for Locally Owned Players only, not AI or the server's copy of the PlayerControllers
-	// auto Controller = Cast<APlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-	auto PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (PC && PC->IsLocalPlayerController())
-	{
-		if (HealthbarWidgetClass)
-		{
-			FloatingHealthbarWidget = CreateWidget<UHealthbarWidget>(PC, HealthbarWidgetClass);
-			if (FloatingHealthbarWidget && FloatingHealthbarComponent)
-			{
-				FloatingHealthbarComponent->SetWidget(FloatingHealthbarWidget);
-				FloatingHealthbarWidget->SetOwningCharacter(this);
-			}
-		}
-	}
 }
