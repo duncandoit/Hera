@@ -145,12 +145,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
 	void SetCameraToTPV();
 
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character")
+	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 	
 	UCameraComponent* GetThirdPersonCameraComponent() const { return ThirdPersonCameraComponent; }
-
-	UFUNCTION(BlueprintCallable, Category ="Hera|Character")
-	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 
 private:
 	// Pawn mesh: 1st person view (arms; seen only by self)

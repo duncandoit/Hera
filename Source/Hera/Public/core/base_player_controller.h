@@ -10,7 +10,4 @@ UCLASS()
 class HERA_API APlayerControllerBase : public APlayerController
 {
    GENERATED_BODY()
-
-public:
-   void OnPossess(APawn* InPawn) override;
 };
