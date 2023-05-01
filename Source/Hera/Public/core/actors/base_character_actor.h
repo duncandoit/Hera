@@ -19,35 +19,13 @@ class USoundBase;
 class UAbilityBase;
 
 UCLASS(config=Game)
-class ACharacterBase : public ACharacter, public IAbilitySystemInterface
+class HERA_API ACharacterBase : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 	//------------------------------------------------------------------------------------------------------------------
 	/// MARK: - Gamplay Ability System
 	//------------------------------------------------------------------------------------------------------------------
-
-private:
-	UPROPERTY(
-		VisibleAnywhere, BlueprintReadOnly, Category="Hera|Character", 
-		meta = (AllowPrivateAccess = "true"))
-	class UAbilitySystemComponentBase* AbilitySystemComponent;
-
-	UPROPERTY(
-		BlueprintReadWrite, Category="Hera|Character|Attributes", 
-		meta = (AllowPrivateAccess = "true"))
-	class ULifeAttributeSet* LifeAttributes;
-
-	// We need to initialize the Ability System on the server and client
-	// This function is called on the server and is a convenient place to 
-	// init the Ability System there. 
-	virtual void PossessedBy(AController* NewController) override;
-	
-	// This function is called on the client and is a convenient place to 
-	// init the Ability System there. 
-	virtual void OnRep_PlayerState() override;
-
-	void AssignInputBindings();
 
 public:
 	// The Ability System uses this via the IAbilitySystemInterface. 
@@ -107,9 +85,72 @@ public:
 	UFUNCTION(BlueprintPure, Category="Hera|Character|Attributes")
 	float GetRewardXP() const;
 
+private:
+	UPROPERTY(
+		VisibleAnywhere, BlueprintReadOnly, Category="Hera|Character", 
+		meta = (AllowPrivateAccess = "true"))
+	class UAbilitySystemComponentBase* AbilitySystemComponent;
+
+	UPROPERTY(
+		BlueprintReadWrite, Category="Hera|Character|Attributes", 
+		meta = (AllowPrivateAccess = "true"))
+	class ULifeAttributeSet* LifeAttributes;
+
+	// We need to initialize the Ability System on the server and client
+	// This function is called on the server and is a convenient place to 
+	// init the Ability System there. 
+	virtual void PossessedBy(AController* NewController) override;
+	
+	// This function is called on the client and is a convenient place to 
+	// init the Ability System there. 
+	virtual void OnRep_PlayerState() override;
+
+	void AssignInputBindings();
+
 	//------------------------------------------------------------------------------------------------------------------
 	/// MARK: - Character
 	//------------------------------------------------------------------------------------------------------------------
+
+public:
+	ACharacterBase();
+
+	virtual void Landed(const FHitResult& Hit) override;
+
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode) override;
+
+	UPROPERTY(
+		EditAnywhere, BlueprintReadOnly, Category ="Hera|Character|Input", 
+		meta = (AllowPrivateAccess = "true"))
+	class UInputAction* LookAction;
+
+	// Bool for AnimBP to switch to another animation set
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category ="Hera|Character|Weapon")
+	bool bHasRifle;
+
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Weapon")
+	void SetHasRifle(bool bNewHasRifle);
+
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Weapon")
+	bool GetHasRifle();
+
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
+	void SetCameraIsChangingPov(bool bNewIsChanging);
+
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
+	bool GetCameraIsChangingPov();
+
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
+	void SetCameraToFPV();
+
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
+	void SetCameraToTPV();
+
+	UFUNCTION(BlueprintCallable, Category ="Hera|Character")
+	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
+	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+	
+	UCameraComponent* GetThirdPersonCameraComponent() const { return ThirdPersonCameraComponent; }
 
 private:
 	// Pawn mesh: 1st person view (arms; seen only by self)
@@ -164,46 +205,6 @@ private:
 		meta=(AllowPrivateAccess = "true"))
 	class UInputAction* CrouchAction;
 
-public:
-	ACharacterBase();
-
-	UPROPERTY(
-		EditAnywhere, BlueprintReadOnly, Category ="Hera|Character|Input", 
-		meta = (AllowPrivateAccess = "true"))
-	class UInputAction* LookAction;
-
-	// Bool for AnimBP to switch to another animation set
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category ="Hera|Character|Weapon")
-	bool bHasRifle;
-
-	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Weapon")
-	void SetHasRifle(bool bNewHasRifle);
-
-	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Weapon")
-	bool GetHasRifle();
-
-	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
-	void SetCameraIsChangingPov(bool bNewIsChanging);
-
-	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
-	bool GetCameraIsChangingPov();
-
-	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
-	void SetCameraToFPV();
-
-	UFUNCTION(BlueprintCallable, Category ="Hera|Character|Camera")
-	void SetCameraToTPV();
-
-	UCameraComponent* GetFirstPersonCameraComponent() const { 
-		return FirstPersonCameraComponent;
-	}
-	
-	UCameraComponent* GetThirdPersonCameraComponent() const { 
-		return ThirdPersonCameraComponent;
-	}
-
-	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-
 protected:
 	virtual void BeginPlay();
 
@@ -216,6 +217,27 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Hera|Character|Input")
 	void UnDuck(const FInputActionValue& Value);
+
+	//------------------------------------------------------------------------------------------------------------------
+	/// MARK: - UI
+	//------------------------------------------------------------------------------------------------------------------
+
+public:
+	/// The healthbar that floats over characters' heads
+	class UHealthbarWidget* GetFloatingHealthbar();
+
+protected:
+	UFUNCTION()
+	void InitializeFloatingHealthbar();
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Hera|UI")
+	TSubclassOf<class UHealthbarWidget> HealthbarWidgetClass;
+
+	UPROPERTY()
+	class UHealthbarWidget* FloatingHealthbarWidget;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Hera|UI")
+	class UWidgetComponent* FloatingHealthbarComponent;
 
 	//------------------------------------------------------------------------------------------------------------------
 	/// MARK: - APawn interface

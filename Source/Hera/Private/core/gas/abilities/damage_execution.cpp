@@ -3,6 +3,7 @@
 #include "core/gas/abilities/damage_execution.h"
 #include "core/gas/life_attribute_set.h"
 #include "core/gas/base_asc.h"
+#include "core/gas/tags.h"
 
 // Declare the attributes to capture and define how we want to capture them from the Source and Target.
 struct FDamageCapture
@@ -104,9 +105,10 @@ void UDamageExecution::Execute_Implementation(
 	);
 	
 	//Add SetByCaller damage if it exists
-	const auto SetByTag = FGameplayTag::RequestGameplayTag(FName("Effect.Damage.Instant"));
-	const float SetByDamage = EffectSpec.GetSetByCallerMagnitude(SetByTag, false, -1.0f); // tag, warn, default
-	Damage += FMath::Max<float>(SetByDamage, 0.0f);
+	Damage += FMath::Max<float>(
+		EffectSpec.GetSetByCallerMagnitude(HeraTags::Tag_Damage, false, -1.0f), // tag, warn, default
+		0.0f
+	);
 
 	// Can multiply any damage boosters here
 	float UnmitigatedDamage = Damage; 

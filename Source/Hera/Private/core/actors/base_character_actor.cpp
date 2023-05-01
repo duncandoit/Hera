@@ -5,14 +5,20 @@
 #include "core/gas/life_attribute_set.h"
 #include "core/gas/abilities/base_ability.h"
 #include "core/gas/base_asc.h"
+#include "core/gas/tags.h"
+#include "core/ui/healthbar_widget.h"
+#include "core/base_player_controller.h"
 
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include <GameplayEffectTypes.h>
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 //---------------------------------------------------------------------------------------------------------------------
 /// MARK: - Character
@@ -21,8 +27,8 @@
 ACharacterBase::ACharacterBase()
 	: IsCameraChangeAllowed(true)
 	, bCameraIsChangingPov(false)
-	, bCameraIsFirstPerson(true)
 	, bHasRifle(false)
+	, bCameraIsFirstPerson(true)
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
@@ -57,9 +63,31 @@ ACharacterBase::ACharacterBase()
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
+	float CapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	FloatingHealthbarComponent = CreateDefaultSubobject<UWidgetComponent>(FName("Floating Healthbar Widget"));
+	FloatingHealthbarComponent->SetupAttachment(RootComponent);
+	FloatingHealthbarComponent->SetRelativeLocation(FVector(0, 0, CapsuleHalfHeight)); // Top of the capsule
+	FloatingHealthbarComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	FloatingHealthbarComponent->SetDrawSize(FVector2D(500, 500));
+
+	HealthbarWidgetClass = StaticLoadClass(
+		UObject::StaticClass(), 
+		nullptr,
+		TEXT("/Game/Hera/UI/UMG_Healthbar.UMG_Healthbar_C")
+	);
+	if (!HealthbarWidgetClass)
+	{
+		UE_LOG(
+			LogTemp, 
+			Error, 
+			TEXT("%s() Failed to find HealthbarWidgetClass. If it was moved please update the reference location in C++."),
+			*FString(__FUNCTION__)
+		);
+	}
+
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponentBase>("AbilitySystemComponent");
 	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	// Initializing the AttributeSet in the Owner Actor's constructor automatically registers
 	// it with the AbilitySystemComponent
@@ -68,11 +96,15 @@ ACharacterBase::ACharacterBase()
 
 void ACharacterBase::BeginPlay()
 {
-	// Call the base class  
 	Super::BeginPlay();
 
+	// Only needed for Heroes placed in world when the player is the Server.
+	// On respawn, they are set up in PossessedBy.
+	// When the player is a client, the floating healthbars are all set up in OnRep_PlayerState.
+	InitializeFloatingHealthbar();
+
 	//Add Input Mapping Context
-	if (auto PlayerController = Cast<APlayerController>(Controller))
+	if (auto PlayerController = Cast<APlayerControllerBase>(Controller))
 	{
 		auto Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(
 			PlayerController->GetLocalPlayer()
@@ -84,9 +116,154 @@ void ACharacterBase::BeginPlay()
 	}
 }
 
+// Server-only
+void ACharacterBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	// Server GAS init
+	AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
+	InitializeAttributes();
+	GiveAbilities();
+
+	// If player is host on listen server, the floating status bar would have been created   
+	// for them from BeginPlay before player possession, hide it
+	if (IsLocallyControlled() && IsPlayerControlled() && FloatingHealthbarComponent && FloatingHealthbarWidget)
+	{
+		FloatingHealthbarComponent->SetVisibility(false, true);
+	}
+}
+
+// Client-only
+void ACharacterBase::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	// Client GAS init
+	AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
+	InitializeAttributes();
+	AssignInputBindings();
+
+	// Simulated on proxies don't have their PlayerStates yet when 
+	// BeginPlay is called so we call it again here
+	InitializeFloatingHealthbar();
+}
+
+void ACharacterBase::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	AbilitySystemComponent->AddReplicatedLooseGameplayTag(HeraTags::Tag_Landed);
+}
+
+void ACharacterBase::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+
+	const auto NewMode = GetCharacterMovement()->MovementMode;
+	if (NewMode == EMovementMode::MOVE_Falling)
+	{
+		AbilitySystemComponent->RemoveReplicatedLooseGameplayTag(HeraTags::Tag_Landed);
+	}
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+/// MARK: - UI
+//---------------------------------------------------------------------------------------------------------------------
+
+UHealthbarWidget* ACharacterBase::GetFloatingHealthbar()
+{
+	return FloatingHealthbarWidget;
+}
+
+void ACharacterBase::InitializeFloatingHealthbar()
+{
+	// Only create once
+	if (FloatingHealthbarWidget || !IsValid(AbilitySystemComponent))
+	{
+		return;
+	}
+
+	// Don't create for locally controlled player. We could add a game setting to toggle this later.
+	if (IsPlayerControlled() && IsLocallyControlled())
+	{
+		return;
+	}
+
+	// Need a valid PlayerState
+	// if (!GetPlayerState())
+	// {
+	// 	return;
+	// }
+
+	// Setup UI for Locally Owned Players only, not AI or the server's copy of the PlayerControllers
+	auto PC = Cast<APlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	if (PC && PC->IsLocalPlayerController())
+	{
+		if (HealthbarWidgetClass)
+		{
+			// Creating a widget requires that the first arg be derived from one of the following:
+			// - UWidget, UWidgetTree, APlayerController, UGameInstance, UWorld
+			FloatingHealthbarWidget = CreateWidget<UHealthbarWidget>(PC, HealthbarWidgetClass);
+			if (FloatingHealthbarWidget && FloatingHealthbarComponent)
+			{
+				FloatingHealthbarWidget->SetOwningCharacter(this);
+				FloatingHealthbarComponent->SetWidget(FloatingHealthbarWidget);
+			}
+		}
+	}
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+/// MARK: - Abilty System
+//---------------------------------------------------------------------------------------------------------------------
+
+class UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void ACharacterBase::GiveAbilities() 
+{
+	if (HasAuthority() && AbilitySystemComponent)
+	{
+		for (TSubclassOf<UAbilityBase>& Ability : DefaultAbilities)
+		{
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(
+				Ability, 
+				1, 
+				static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID), 
+				this
+			));
+		}
+	}
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 /// MARK: - Attributes
 //---------------------------------------------------------------------------------------------------------------------
+
+void ACharacterBase::InitializeAttributes()
+{
+	if (AbilitySystemComponent && DefaultAttributeEffect)
+	{
+		auto EffectContextHandle = AbilitySystemComponent->MakeEffectContext();
+		EffectContextHandle.AddSourceObject(this);
+
+		auto EffectSpecHandle = AbilitySystemComponent->MakeOutgoingSpec(
+			DefaultAttributeEffect, // GameplayEffect class
+			1,                      // Level
+			EffectContextHandle     // Context
+		);
+
+		if (EffectSpecHandle.IsValid())
+		{
+			auto EffectHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
+				*EffectSpecHandle.Data.Get() // GameplayEffect
+			);
+		}
+	}
+}
 
 float ACharacterBase::GetMaxHealth() const
 {
@@ -212,72 +389,6 @@ float ACharacterBase::GetRewardXP() const
 	}
 
 	return 0.0f;
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-/// MARK: - Abilties
-//---------------------------------------------------------------------------------------------------------------------
-
-class UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
-{
-	return AbilitySystemComponent;
-}
-
-void ACharacterBase::InitializeAttributes()
-{
-	if (AbilitySystemComponent && DefaultAttributeEffect)
-	{
-		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-		EffectContext.AddSourceObject(this);
-
-		FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(
-			DefaultAttributeEffect, // GameplayEffect class
-			1,                      // Level
-			EffectContext           // Context
-		);
-		if (SpecHandle.IsValid())
-		{
-			auto EffectHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(
-				*SpecHandle.Data.Get() // GameplayEffect
-			);
-		}
-	}
-}
-
-void ACharacterBase::GiveAbilities() 
-{
-	if (HasAuthority() && AbilitySystemComponent)
-	{
-		for (TSubclassOf<UAbilityBase>& Ability : DefaultAbilities)
-		{
-			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(
-				Ability, 
-				1, 
-				static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID), 
-				this
-			));
-		}
-	}
-}
-
-void ACharacterBase::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-	
-	// Server GAS init
-	AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
-	InitializeAttributes();
-	GiveAbilities();
-}
-
-void ACharacterBase::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	// Client GAS init
-	AbilitySystemComponent->InitAbilityActorInfo(this, this); // (Avatar, Owner)
-	InitializeAttributes();
-	AssignInputBindings();
 }
 
 //---------------------------------------------------------------------------------------------------------------------
