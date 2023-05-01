@@ -153,7 +153,6 @@ void ACharacterBase::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
 
-	//AbilitySystemComponent->ApplyGameplayTag(HeraTags::Tag_Landed);
 	AbilitySystemComponent->AddReplicatedLooseGameplayTag(HeraTags::Tag_Landed);
 }
 
@@ -216,13 +215,33 @@ void ACharacterBase::InitializeFloatingHealthbar()
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-/// MARK: - Abilties
+/// MARK: - Abilty System
 //---------------------------------------------------------------------------------------------------------------------
 
 class UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
+
+void ACharacterBase::GiveAbilities() 
+{
+	if (HasAuthority() && AbilitySystemComponent)
+	{
+		for (TSubclassOf<UAbilityBase>& Ability : DefaultAbilities)
+		{
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(
+				Ability, 
+				1, 
+				static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID), 
+				this
+			));
+		}
+	}
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+/// MARK: - Attributes
+//---------------------------------------------------------------------------------------------------------------------
 
 void ACharacterBase::InitializeAttributes()
 {
@@ -245,26 +264,6 @@ void ACharacterBase::InitializeAttributes()
 		}
 	}
 }
-
-void ACharacterBase::GiveAbilities() 
-{
-	if (HasAuthority() && AbilitySystemComponent)
-	{
-		for (TSubclassOf<UAbilityBase>& Ability : DefaultAbilities)
-		{
-			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(
-				Ability, 
-				1, 
-				static_cast<int32>(Ability.GetDefaultObject()->AbilityInputID), 
-				this
-			));
-		}
-	}
-}
-
-//---------------------------------------------------------------------------------------------------------------------
-/// MARK: - Attributes
-//---------------------------------------------------------------------------------------------------------------------
 
 float ACharacterBase::GetMaxHealth() const
 {
