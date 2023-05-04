@@ -225,7 +225,7 @@ class UAbilitySystemComponent* ACharacterBase::GetAbilitySystemComponent() const
 
 void ACharacterBase::GiveAbilities() 
 {
-	if (HasAuthority() && AbilitySystemComponent)
+	if (HasAuthority() && IsValid(AbilitySystemComponent))
 	{
 		for (TSubclassOf<UAbilityBase>& Ability : DefaultAbilities)
 		{
