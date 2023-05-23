@@ -6,10 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "healthbar_widget.generated.h"
 
-class ACharacterBase;
-
-/// TODO: Zach - 4/24/23
-// - Figure out why the OwningCharacter is null when referenced by the UMG graph
+class ACharacterBaseValid;
 
 UCLASS()
 class HERA_API UHealthbarWidget : public UUserWidget
@@ -17,14 +14,14 @@ class HERA_API UHealthbarWidget : public UUserWidget
 	GENERATED_BODY()
 
 private:
-	ACharacterBase* OwningCharacter;
+	ACharacterBaseValid* OwningCharacter;
 	
 public: 
    UFUNCTION(BlueprintPure, Category="Hera")
-   ACharacterBase* GetOwningCharacter() const { return OwningCharacter; }
+   ACharacterBaseValid* GetOwningCharacter() const { return OwningCharacter; }
 
    UFUNCTION(BlueprintCallable, Category="Hera")
-   void SetOwningCharacter(ACharacterBase* NewOwningCharacter);
+   void SetOwningCharacter(ACharacterBaseValid* NewOwningCharacter);
 
    UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Hera")
 	void SetMaxHealth(float MaxHealth);

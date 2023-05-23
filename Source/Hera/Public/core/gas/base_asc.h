@@ -28,8 +28,8 @@ class HERA_API UAbilitySystemComponentBase : public UAbilitySystemComponent
 	GENERATED_BODY()
 
 public:
-	bool bCharacterAbilitiesGiven = false;
-	bool bStartupEffectsApplied = false;
+	bool bDefaultAbilitiesInitialized = false;
+	bool bDefaultEffectsInitialized = false;
 
 	/// Broadcasts whenever the ASC receives damage.
 	FDamageReceivedDelegate DamageReceivedDelegate;

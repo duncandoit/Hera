@@ -1,60 +1,60 @@
-// Copyright Final Fall Games. All Rights Reserved.
+// // Copyright Final Fall Games. All Rights Reserved.
 
-#pragma once
+// #pragma once
 
-#include "CoreMinimal.h"
-#include "Components/SkeletalMeshComponent.h"
-#include "weapon_component.generated.h"
+// #include "CoreMinimal.h"
+// #include "Components/SkeletalMeshComponent.h"
+// #include "weapon_component.generated.h"
 
-class ACharacterBase;
+// class ACharacterBase;
 
-UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class HERA_API UTP_WeaponComponent : public USkeletalMeshComponent
-{
-	GENERATED_BODY()
+// UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+// class HERA_API UTP_WeaponComponent : public USkeletalMeshComponent
+// {
+// 	GENERATED_BODY()
 
-public:
-	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category=Projectile)
-	TSubclassOf<class AHeraProjectile> ProjectileClass;
+// public:
+// 	/** Projectile class to spawn */
+// 	UPROPERTY(EditDefaultsOnly, Category=Projectile)
+// 	TSubclassOf<class AHeraProjectile> ProjectileClass;
 
-	/** Sound to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
-	TObjectPtr<USoundBase> FireSound;
+// 	/** Sound to play each time we fire */
+// 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
+// 	TObjectPtr<USoundBase> FireSound;
 	
-	/** AnimMontage to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-	TObjectPtr<UAnimMontage> FireAnimation;
+// 	/** AnimMontage to play each time we fire */
+// 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+// 	TObjectPtr<UAnimMontage> FireAnimation;
 
-	/** Gun muzzle's offset from the characters location */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
-	FVector MuzzleOffset;
+// 	/** Gun muzzle's offset from the characters location */
+// 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
+// 	FVector MuzzleOffset;
 
-	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputMappingContext* FireMappingContext;
+// 	/** MappingContext */
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+// 	class UInputMappingContext* FireMappingContext;
 
-	/** Fire Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputAction* FireAction;
+// 	/** Fire Input Action */
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+// 	class UInputAction* FireAction;
 
-	/** Sets default values for this component's properties */
-	UTP_WeaponComponent();
+// 	/** Sets default values for this component's properties */
+// 	UTP_WeaponComponent();
 
-	/** Attaches the actor to a FirstPersonCharacter */
-	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void AttachWeapon(ACharacterBase* TargetCharacter);
+// 	/** Attaches the actor to a FirstPersonCharacter */
+// 	UFUNCTION(BlueprintCallable, Category="Weapon")
+// 	void AttachWeapon(ACharacterBase* TargetCharacter);
 
-	/** Make the weapon Fire a Projectile */
-	UFUNCTION(BlueprintCallable, Category="Weapon")
-	void Fire();
+// 	/** Make the weapon Fire a Projectile */
+// 	UFUNCTION(BlueprintCallable, Category="Weapon")
+// 	void Fire();
 
-protected:
-	/** Ends gameplay for this component. */
-	UFUNCTION()
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+// protected:
+// 	/** Ends gameplay for this component. */
+// 	UFUNCTION()
+// 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-private:
-	/** The Character holding this weapon*/
-	ACharacterBase* Character;
-};
+// private:
+// 	/** The Character holding this weapon*/
+// 	ACharacterBase* Character;
+// };

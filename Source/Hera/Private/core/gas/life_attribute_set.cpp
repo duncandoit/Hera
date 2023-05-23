@@ -2,7 +2,8 @@
 
 
 #include "core/gas/life_attribute_set.h"
-#include "core/actors/base_character_actor.h"
+// #include "core/actors/base_character_actor.h"
+#include "core/actors/base_character.h"
 
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
@@ -48,25 +49,25 @@ void ULifeAttributeSet::HandleDamage(const float DamageReceived /*, SourceCharac
 	}
 	
 	// OverHealth
-	if (OldOverHealth > 0 && RemainingDamage > 0)
+	if (OldOverHealth > 0.0f && RemainingDamage > 0.0f)
 	{
 		SetOverHealth(DamagedValue(OldOverHealth));
 	}
 
 	// Armor
-	if (OldArmor > 0 && RemainingDamage > 0)
+	if (OldArmor > 0.0f && RemainingDamage > 0.0f)
 	{
 		SetArmor(DamagedValue(OldArmor));
 	}
 
 	// Shields
-	if (OldShields > 0 && RemainingDamage > 0)
+	if (OldShields > 0.0f && RemainingDamage > 0.0f)
 	{
 		SetShields(DamagedValue(OldShields));
 	}
 
 	// Health
-	if (OldHealth > 0 && RemainingDamage > 0)
+	if (OldHealth > 0.0f && RemainingDamage > 0.0f)
 	{
 		SetHealth(DamagedValue(OldHealth));
 	}
@@ -77,7 +78,7 @@ void ULifeAttributeSet::HandleHealing(const float HealingReceived)
 	/// TODO: Check for GameplayTags like:
 	//       - Cursed : Can't receive healing
 
-	if (!(HealingReceived > 0)) {
+	if (!(HealingReceived > 0.0f)) {
 		return;
 	}
 
@@ -105,13 +106,13 @@ void ULifeAttributeSet::HandleHealing(const float HealingReceived)
 	}
 
 	// Shields
-	if (OldShields < ShieldsMax && RemainingHealing > 0)
+	if (OldShields < ShieldsMax && RemainingHealing > 0.0f)
 	{
 		SetShields(HealedValue(OldShields, ShieldsMax));
 	}
 
 	// Armor
-	if (OldArmor < ArmorMax && RemainingHealing > 0)
+	if (OldArmor < ArmorMax && RemainingHealing > 0.0f)
 	{
 		SetArmor(HealedValue(OldArmor, ArmorMax));
 	}
@@ -196,18 +197,18 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	// Get the Target actor, which should be our owner
 	AActor* TargetActor = nullptr;
 	AController* TargetController = nullptr;
-	ACharacterBase* TargetCharacter = nullptr;
+	ACharacterBaseValid* TargetCharacter = nullptr;
 	if (Data.Target.AbilityActorInfo.IsValid() && Data.Target.AbilityActorInfo->AvatarActor.IsValid())
 	{
 		TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
 		TargetController = Data.Target.AbilityActorInfo->PlayerController.Get();
-		TargetCharacter = Cast<ACharacterBase>(TargetActor);
+		TargetCharacter = Cast<ACharacterBaseValid>(TargetActor);
 	}
 
 	// Get the Source actor
 	AActor* SourceActor = nullptr;
 	AController* SourceController = nullptr;
-	ACharacterBase* SourceCharacter = nullptr;
+	// ACharacterBaseValid* SourceCharacter = nullptr;
 	if (SourceASC && SourceASC->AbilityActorInfo.IsValid() && SourceASC->AbilityActorInfo->AvatarActor.IsValid())
 	{
 		SourceActor = SourceASC->AbilityActorInfo->AvatarActor.Get();
@@ -220,15 +221,15 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 			}
 		}
 
-		// Get Source Pawn with their controller
-		if (SourceController)
-		{
-			SourceCharacter = Cast<ACharacterBase>(SourceController->GetPawn());
-		}
-		else
-		{
-			SourceCharacter = Cast<ACharacterBase>(SourceActor);
-		}
+		// // Get Source Pawn with their controller
+		// if (SourceController)
+		// {
+		// 	SourceCharacter = Cast<ACharacterBaseValid>(SourceController->GetPawn());
+		// }
+		// else
+		// {
+		// 	SourceCharacter = Cast<ACharacterBaseNEW>(SourceActor);
+		// }
 
 		// Get Source Actor if the context has a causer set
 		if (Context.GetEffectCauser())

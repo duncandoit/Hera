@@ -1,35 +1,35 @@
-// Copyright Final Fall Games. All Rights Reserved.
+// // Copyright Final Fall Games. All Rights Reserved.
 
-#pragma once
+// #pragma once
 
-#include "core/actors/base_character_actor.h"
+// #include "core/actors/base_character_actor.h"
 
-#include "CoreMinimal.h"
-#include "Components/SphereComponent.h"
-#include "weapon_pickup_component.generated.h"
+// #include "CoreMinimal.h"
+// #include "Components/SphereComponent.h"
+// #include "weapon_pickup_component.generated.h"
 
-// Declaration of the delegate that will be called when someone picks this up
-// The character picking this up is the parameter sent with the notification
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUp, ACharacterBase*, PickUpCharacter);
+// // Declaration of the delegate that will be called when someone picks this up
+// // The character picking this up is the parameter sent with the notification
+// DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUp, ACharacterBase*, PickUpCharacter);
 
-UCLASS(Blueprintable, BlueprintType, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class HERA_API UTP_PickUpComponent : public USphereComponent
-{
-	GENERATED_BODY()
+// UCLASS(Blueprintable, BlueprintType, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+// class HERA_API UTP_PickUpComponent : public USphereComponent
+// {
+// 	GENERATED_BODY()
 
-public:
+// public:
 	
-	/** Delegate to whom anyone can subscribe to receive this event */
-	UPROPERTY(BlueprintAssignable, Category = "Interaction")
-	FOnPickUp OnPickUp;
+// 	/** Delegate to whom anyone can subscribe to receive this event */
+// 	UPROPERTY(BlueprintAssignable, Category = "Interaction")
+// 	FOnPickUp OnPickUp;
 
-	UTP_PickUpComponent();
-protected:
+// 	UTP_PickUpComponent();
+// protected:
 
-	/** Called when the game starts */
-	virtual void BeginPlay() override;
+// 	/** Called when the game starts */
+// 	virtual void BeginPlay() override;
 
-	/** Code for when something overlaps this component */
-	UFUNCTION()
-	void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-};
+// 	/** Code for when something overlaps this component */
+// 	UFUNCTION()
+// 	void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+// };

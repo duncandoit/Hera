@@ -1,186 +1,186 @@
-// Copyright Final Fall Games. All Rights Reserved.
+// // Copyright Final Fall Games. All Rights Reserved.
 
 
-#include "core/components/weapon_component.h"
-#include "core/actors/base_character_actor.h"
-#include "core/base_player_controller.h"
-#include "core/actors/projectile_actor.h"
-#include "core/debug_utils.h"
+// #include "core/components/weapon_component.h"
+// #include "core/actors/base_character_actor.h"
+// #include "core/base_player_controller.h"
+// #include "core/actors/projectile_actor.h"
+// #include "core/debug_utils.h"
 
-#include "GameFramework/PlayerController.h"
-#include "Camera/PlayerCameraManager.h"
-#include "Kismet/GameplayStatics.h"
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "Camera/CameraComponent.h"
+// #include "GameFramework/PlayerController.h"
+// #include "Camera/PlayerCameraManager.h"
+// #include "Kismet/GameplayStatics.h"
+// #include "EnhancedInputComponent.h"
+// #include "EnhancedInputSubsystems.h"
+// #include "Camera/CameraComponent.h"
 
-// Sets default values for this component's properties
-UTP_WeaponComponent::UTP_WeaponComponent()
-{
-	// Default offset from the character location for projectiles to spawn
-	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
-}
+// // Sets default values for this component's properties
+// UTP_WeaponComponent::UTP_WeaponComponent()
+// {
+// 	// Default offset from the character location for projectiles to spawn
+// 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
+// }
 
 
-void UTP_WeaponComponent::Fire()
-{
-	if (Character == nullptr || Character->GetController() == nullptr)
-	{
-		return;
-	}
+// void UTP_WeaponComponent::Fire()
+// {
+// 	if (Character == nullptr || Character->GetController() == nullptr)
+// 	{
+// 		return;
+// 	}
 
-	// Try and fire a projectile
-	if (ProjectileClass != nullptr)
-	{
-		const auto  World = GetWorld();
-		if (World != nullptr)
-		{
-			auto PlayerController = Cast<APlayerControllerBase>(Character->GetController());
-			const auto SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const auto SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
+// 	// Try and fire a projectile
+// 	if (ProjectileClass != nullptr)
+// 	{
+// 		const auto  World = GetWorld();
+// 		if (World != nullptr)
+// 		{
+// 			auto PlayerController = Cast<APlayerControllerBase>(Character->GetController());
+// 			const auto SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+// 			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+// 			const auto SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
 			
-			// Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+// 			// Set Spawn Collision Handling Override
+// 			FActorSpawnParameters ActorSpawnParams;
+// 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			
-			// Spawn the projectile at the muzzle
-			World->SpawnActor<AHeraProjectile>(
-				ProjectileClass, 
-				SpawnLocation, 
-				SpawnRotation, 	
-				ActorSpawnParams
-			);
+// 			// Spawn the projectile at the muzzle
+// 			World->SpawnActor<AHeraProjectile>(
+// 				ProjectileClass, 
+// 				SpawnLocation, 
+// 				SpawnRotation, 	
+// 				ActorSpawnParams
+// 			);
 
 
-			// Do line trace for hitscan impact
-		// 	FColor DebugLineColor = FColor:: Blue;
-		// 	float TraceDistance = 10000.f; // centemeters
-		// 	float ImpulseForce = 500.f;
-		// 	const UCameraComponent& CharCam = *Character->GetFirstPersonCameraComponent();
-		// 	const FVector TraceStart = CharCam.GetComponentLocation();
-		// 	const FVector TraceEnd = TraceStart + CharCam.GetForwardVector() * TraceDistance;
-		// 	FHitResult Hit;
-		// 	const bool bDidHit = World->LineTraceSingleByChannel(
-		// 		Hit,											// Hit result of the trace
-		// 		TraceStart,									// Start vector
-		// 		TraceEnd,									// End vector
-		// 		ECollisionChannel::ECC_Visibility	// Collision channel
-		// 	);
+// 			// Do line trace for hitscan impact
+// 		// 	FColor DebugLineColor = FColor:: Blue;
+// 		// 	float TraceDistance = 10000.f; // centemeters
+// 		// 	float ImpulseForce = 500.f;
+// 		// 	const UCameraComponent& CharCam = *Character->GetFirstPersonCameraComponent();
+// 		// 	const FVector TraceStart = CharCam.GetComponentLocation();
+// 		// 	const FVector TraceEnd = TraceStart + CharCam.GetForwardVector() * TraceDistance;
+// 		// 	FHitResult Hit;
+// 		// 	const bool bDidHit = World->LineTraceSingleByChannel(
+// 		// 		Hit,											// Hit result of the trace
+// 		// 		TraceStart,									// Start vector
+// 		// 		TraceEnd,									// End vector
+// 		// 		ECollisionChannel::ECC_Visibility	// Collision channel
+// 		// 	);
 			
-		// 	if (bDidHit) 
-		// 	{
-		// 		if ((Hit.bBlockingHit == true) && (Hit.Component != nullptr))
-		// 		{
-		// 			UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
+// 		// 	if (bDidHit) 
+// 		// 	{
+// 		// 		if ((Hit.bBlockingHit == true) && (Hit.Component != nullptr))
+// 		// 		{
+// 		// 			UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(Hit.GetActor()->GetRootComponent());
 					
-		// 			if (MeshComponent->IsSimulatingPhysics())
-		// 			{
-		// 				MeshComponent->AddImpulseAtLocation(
-		// 					CharCam.GetForwardVector() * ImpulseForce * MeshComponent->GetMass(), 
-		// 					Hit.ImpactPoint
-		// 				);
+// 		// 			if (MeshComponent->IsSimulatingPhysics())
+// 		// 			{
+// 		// 				MeshComponent->AddImpulseAtLocation(
+// 		// 					CharCam.GetForwardVector() * ImpulseForce * MeshComponent->GetMass(), 
+// 		// 					Hit.ImpactPoint
+// 		// 				);
 						
-		// 				UHeraUtil::DebugPrint("Line trace hit physics object", DebugLineColor);
-		// 			}
-		// 			else 
-		// 			{
-		// 				DebugLineColor = FColor::White;
-		// 				UHeraUtil::DebugPrint("Line trace hit static object", DebugLineColor);
-		// 			}
-		// 		}
-		// 		else 
-		// 		{
-		// 			DebugLineColor = FColor::White;
-		// 			UHeraUtil::DebugPrint("Line trace succeeded but didn't make contact", DebugLineColor);
-		// 		}
-		// 	}
-		// 	else 
-		// 	{
-		// 		DebugLineColor = FColor::Red;
-		// 		UHeraUtil::DebugPrint("Line trace fail", DebugLineColor);
-		// 	}
+// 		// 				UHeraUtil::DebugPrint("Line trace hit physics object", DebugLineColor);
+// 		// 			}
+// 		// 			else 
+// 		// 			{
+// 		// 				DebugLineColor = FColor::White;
+// 		// 				UHeraUtil::DebugPrint("Line trace hit static object", DebugLineColor);
+// 		// 			}
+// 		// 		}
+// 		// 		else 
+// 		// 		{
+// 		// 			DebugLineColor = FColor::White;
+// 		// 			UHeraUtil::DebugPrint("Line trace succeeded but didn't make contact", DebugLineColor);
+// 		// 		}
+// 		// 	}
+// 		// 	else 
+// 		// 	{
+// 		// 		DebugLineColor = FColor::Red;
+// 		// 		UHeraUtil::DebugPrint("Line trace fail", DebugLineColor);
+// 		// 	}
 
-		// 	DrawDebugLine(
-		// 		World, 			// World
-		// 		TraceStart, 	// Start point
-		// 		TraceEnd, 		// End point
-		// 		DebugLineColor,// Color
-		// 		false, 			// Is it persistent?
-		// 		5.f, 				// LifeTime
-		// 		(uint8)0U, 
-		// 		0.5f				// Thickness
-		// 	);
-		}
-	}
+// 		// 	DrawDebugLine(
+// 		// 		World, 			// World
+// 		// 		TraceStart, 	// Start point
+// 		// 		TraceEnd, 		// End point
+// 		// 		DebugLineColor,// Color
+// 		// 		false, 			// Is it persistent?
+// 		// 		5.f, 				// LifeTime
+// 		// 		(uint8)0U, 
+// 		// 		0.5f				// Thickness
+// 		// 	);
+// 		}
+// 	}
 	
-	// Try and play the sound if specified
-	if (FireSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
-	}
+// 	// Try and play the sound if specified
+// 	if (FireSound != nullptr)
+// 	{
+// 		UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
+// 	}
 	
-	// Try and play a firing animation if specified
-	if (FireAnimation != nullptr)
-	{
-		// Get the animation object for the arms mesh
-		auto AnimInstance = Character->GetMesh1P()->GetAnimInstance();
-		if (AnimInstance != nullptr)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
-		}
-	}
-}
+// 	// Try and play a firing animation if specified
+// 	if (FireAnimation != nullptr)
+// 	{
+// 		// Get the animation object for the arms mesh
+// 		auto AnimInstance = Character->GetMesh1P()->GetAnimInstance();
+// 		if (AnimInstance != nullptr)
+// 		{
+// 			AnimInstance->Montage_Play(FireAnimation, 1.f);
+// 		}
+// 	}
+// }
 
-void UTP_WeaponComponent::AttachWeapon(ACharacterBase* TargetCharacter)
-{
-	Character = TargetCharacter;
-	if (Character == nullptr)
-	{
-		return;
-	}
+// void UTP_WeaponComponent::AttachWeapon(ACharacterBase* TargetCharacter)
+// {
+// 	Character = TargetCharacter;
+// 	if (Character == nullptr)
+// 	{
+// 		return;
+// 	}
 
-	// Attach the weapon to the First Person Character
-	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-	AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
+// 	// Attach the weapon to the First Person Character
+// 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+// 	AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
 	
-	// switch bHasRifle so the animation blueprint can switch to another animation set
-	Character->SetHasRifle(true);
+// 	// switch bHasRifle so the animation blueprint can switch to another animation set
+// 	Character->SetHasRifle(true);
 
-	// Set up action bindings
-	if (auto PlayerController = Cast<APlayerControllerBase>(Character->GetController()))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			// Set the priority of the mapping to 1, so that it overrides the Jump action with the Fire action when using touch input
-			Subsystem->AddMappingContext(FireMappingContext, 1);
-		}
+// 	// Set up action bindings
+// 	if (auto PlayerController = Cast<APlayerControllerBase>(Character->GetController()))
+// 	{
+// 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+// 		{
+// 			// Set the priority of the mapping to 1, so that it overrides the Jump action with the Fire action when using touch input
+// 			Subsystem->AddMappingContext(FireMappingContext, 1);
+// 		}
 
-		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
-		{
-			// Fire
-			EnhancedInputComponent->BindAction(
-				FireAction,
-				ETriggerEvent::Triggered, 
-				this, 
-				&UTP_WeaponComponent::Fire
-			);
-		}
-	}
-}
+// 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
+// 		{
+// 			// Fire
+// 			EnhancedInputComponent->BindAction(
+// 				FireAction,
+// 				ETriggerEvent::Triggered, 
+// 				this, 
+// 				&UTP_WeaponComponent::Fire
+// 			);
+// 		}
+// 	}
+// }
 
-void UTP_WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	if (Character == nullptr)
-	{
-		return;
-	}
+// void UTP_WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+// {
+// 	if (Character == nullptr)
+// 	{
+// 		return;
+// 	}
 
-	if (auto PlayerController = Cast<APlayerControllerBase>(Character->GetController()))
-	{
-		if (auto Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->RemoveMappingContext(FireMappingContext);
-		}
-	}
-}
+// 	if (auto PlayerController = Cast<APlayerControllerBase>(Character->GetController()))
+// 	{
+// 		if (auto Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+// 		{
+// 			Subsystem->RemoveMappingContext(FireMappingContext);
+// 		}
+// 	}
+// }

@@ -207,7 +207,7 @@ void ACharacterBase::InitializeFloatingHealthbar()
 			FloatingHealthbarWidget = CreateWidget<UHealthbarWidget>(PC, HealthbarWidgetClass);
 			if (FloatingHealthbarWidget && FloatingHealthbarComponent)
 			{
-				FloatingHealthbarWidget->SetOwningCharacter(this);
+				// FloatingHealthbarWidget->SetOwningCharacter(this);
 				FloatingHealthbarComponent->SetWidget(FloatingHealthbarWidget);
 			}
 		}

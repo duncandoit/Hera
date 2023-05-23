@@ -1,10 +1,10 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
 #include "core/ui/healthbar_widget.h"
-#include "core/actors/base_character_actor.h"
+#include "core/actors/base_character.h"
 
 
-void UHealthbarWidget::SetOwningCharacter(ACharacterBase* NewOwningCharacter)
+void UHealthbarWidget::SetOwningCharacter(ACharacterBaseValid* NewOwningCharacter)
 {
    OwningCharacter =  NewOwningCharacter; 
    SetCurrentHealth(  OwningCharacter->GetHealth());
