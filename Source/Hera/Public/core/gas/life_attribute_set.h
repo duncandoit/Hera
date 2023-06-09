@@ -16,21 +16,19 @@
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
 /// AttributeSet governing all stats related to having, losing, and gaining health.
+///
+/// BaseValue changes come from Instant and Periodic GameplayEffects. 
+/// CurrentValue changes come from Duration and Infinite GameplayEffects. 
+/// 
+///| Duration Type       | GameplayCue  | When to use
+///---------------------------------------------------------------------------------------------------------------
+///| Instant & Periodic  | Execute      | Permanent changes to BaseValue. GameplayTags will not be applied.
+///| Duration & Infinite | Add & Remove | Temporary changes to CurrentValue and to apply GameplayTags that will be 
+///                                       removed when the GameplayEffect expires or is manually removed.
 UCLASS()
 class HERA_API ULifeAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
-
-	/// Apply the damage to all health components in this order:
-	/// OverArmor > OverHealth > Armor > Shield > Health.
-	void HandleDamage(const float DamageReceived);
-
-	/// Apply the healing to healable health components in this order:
-	/// Health > Shields > Armor.
-	void HandleHealing(const float HealingReceived);
-
-	/// Grant the Source ASC rewards for defeating you.
-	void HandleKillReward(UAbilitySystemComponent* SourceASC);
 
 public:
 	ULifeAttributeSet();
@@ -39,63 +37,71 @@ public:
 	/// MARK: - UAttributeSet overrides
 	//------------------------------------------------------------------------------------------------------------------
 
+	/// Responds to changes to an Attribute's CurrentValue before the change happens.
+	/// Do not use it for gameplay events and instead use it mainly for clamping CurrentValue.
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+
+	/// Only triggers after changes to the BaseValue of an Attribute from an Instant or Periodic GameplayEffect. 
+	/// This is a valid place to clamp the changes to BaseValue and do more Attribute manipulation when they change 
+	/// from a GameplayEffect.
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	//------------------------------------------------------------------------------------------------------------------
-	/// MARK: - Health related Attributes
+	/// MARK: - Attributes
 	//------------------------------------------------------------------------------------------------------------------
+
+	/// HEALTHPOOL:
 
 	/// Damage is a meta attribute used by the DamageExecution to calculate final damage.
 	/// Temporary value that only exists on the Server. Not replicated.
-	UPROPERTY(BlueprintReadOnly, Category = "Hera|Attributes|Base|Health Pool")
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base")
 	FGameplayAttributeData Damage;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, Damage)
 
 	/// Healing is a meta attribute used to calculate final healing.
 	/// Temporary value that only exists on the Server. Not replicated.
-	UPROPERTY(BlueprintReadOnly, Category = "Hera|Attributes|Base|Health Pool")
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base")
 	FGameplayAttributeData Healing;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, Healing)
 
-	/// Max Health
-	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base|Health Pool", ReplicatedUsing=OnRep_MaxHealth)
+	// Max Health
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, MaxHealth);
 
-	/// Health. The standard HP. Does not regenerate. Must be > 0 to be considered "alive".
-	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base|Health Pool", ReplicatedUsing=OnRep_Health)
+	// Health. The standard HP. Does not regenerate. Must be > 0 to be considered "alive".
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_Health)
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, Health);
 
-	/// Max Shields
-	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base|Health Pool", ReplicatedUsing=OnRep_MaxShields)
+	// Max Shields
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_MaxShields)
 	FGameplayAttributeData MaxShields;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, MaxShields);
 
-	/// Shields. Is damaged the same way Health is but regenerates slowly.
-	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base|Health Pool", ReplicatedUsing=OnRep_Shields)
+	// Shields. Is damaged the same way Health is but regenerates slowly.
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_Shields)
 	FGameplayAttributeData Shields;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, Shields);
 
-	/// Max Armor
-	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base|Health Pool", ReplicatedUsing=OnRep_MaxArmor)
+	// Max Armor
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_MaxArmor)
 	FGameplayAttributeData MaxArmor;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, MaxArmor);
 
-	/// Armor. Takes less damage than Health or Shields. Does not regenerate. 
-	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base|Health Pool", ReplicatedUsing=OnRep_Armor)
+	// Armor. Takes less damage than Health or Shields. Does not regenerate. 
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_Armor)
 	FGameplayAttributeData Armor;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, Armor);
 
-	/// Over Health behaves like Health but cannot be healed.
-	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base|Health Pool", ReplicatedUsing=OnRep_OverHealth)
+	// Over Health behaves like Health but cannot be healed.
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_OverHealth)
 	FGameplayAttributeData OverHealth;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, OverHealth);
 
-	/// Over Armor
-	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base|Health Pool", ReplicatedUsing=OnRep_OverArmor)
+	// Over Armor
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_OverArmor)
 	FGameplayAttributeData OverArmor;
 	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, OverArmor);
 
@@ -104,9 +110,6 @@ public:
 	//  - UltimateCharge
 	//  - UltimateOutOfCombatDecayRate?
 
-	//------------------------------------------------------------------------------------------------------------------
-	/// MARK: - BaseStat / EffortStat Attributes
-	//------------------------------------------------------------------------------------------------------------------
 
 	/// TODO: Implement granular stats -- Should these be in another UAttributeSet?
 	//
@@ -126,29 +129,80 @@ public:
 	//  - AttackStat
 	//  - DefenseStat
 	//  - HealingStat
-	//  - RegenerateHealthPoolStat
 	//  - MeleeDamageStat
 	//  - MeleeKnockbackStat
-	//  
-	/// SCALES: 
-	//  1 is normal, >1 is a buff, <1 is a nerf, 0 is disabled
-	//  - DamageDeltScale
-	//  - DamageReceivedScale
-	//  - HealingDeltScale
-	//  - HealingReceivedScale
-	//  - RegenerateHealthPoolScale
-	//  - WeaponSpreadScale
-	//  - ProjectileSpeedScale
-	//  - DamageFalloffDistanceScale
-	//  - DamageMaxRangeScale
-	//  - FireRateScale
-	//  - CooldownRateScale
-	//  - MoveSpeedScale
-	//  
+	
+	/// SCALES: 1 is normal, >1 is a buff, <1 is a nerf, 0 is disabled
+
+	// DamageDeltScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_DamageDeltScale)
+	FGameplayAttributeData DamageDeltScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, DamageDeltScale);
+
+	// DamageReceivedScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_DamageReceivedScale)
+	FGameplayAttributeData DamageReceivedScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, DamageReceivedScale);
+
+	// HealingDeltScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_HealingDeltScale)
+	FGameplayAttributeData HealingDeltScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, HealingDeltScale);
+
+	// HealingReceivedScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_HealingReceivedScale)
+	FGameplayAttributeData HealingReceivedScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, HealingReceivedScale);
+
+	// KnockbackDeltScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_KnockbackDeltScale)
+	FGameplayAttributeData KnockbackDeltScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, KnockbackDeltScale);
+
+	// KnockbackReceivedScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_KnockbackReceivedScale)
+	FGameplayAttributeData KnockbackReceivedScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, KnockbackReceivedScale);
+	
+	// WeaponSpreadScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_WeaponSpreadScale)
+	FGameplayAttributeData WeaponSpreadScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, WeaponSpreadScale);
+
+	// ProjectileSpeedScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_ProjectileSpeedScale)
+	FGameplayAttributeData ProjectileSpeedScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, ProjectileSpeedScale);
+
+	// HitscanFalloffDistanceScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_HitscanFalloffDistanceScale)
+	FGameplayAttributeData HitscanFalloffDistanceScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, HitscanFalloffDistanceScale);
+
+	// FireRateScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_FireRateScale)
+	FGameplayAttributeData FireRateScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, FireRateScale);
+
+	// CooldownRateScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_CooldownRateScale)
+	FGameplayAttributeData CooldownRateScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, CooldownRateScale);
+
+	// MoveSpeedScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_MoveSpeedScale)
+	FGameplayAttributeData MoveSpeedScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, MoveSpeedScale);
+
+	// UltimateGenRateScale
+	UPROPERTY(BlueprintReadOnly, Category="Hera|Attributes|Base", ReplicatedUsing=OnRep_UltimateGenRateScale)
+	FGameplayAttributeData UltimateGenRateScale;
+	ATTRIBUTE_ACCESSORS(ULifeAttributeSet, UltimateGenRateScale);
+  
 	/// OTHER:
 	//  Values based on distance, speed, time, etc.
-	//  - WeaponDamageFalloffDistance
-	//  - WeaponDamageMaxDistance
+	//  - WeaponFalloffNearDistance
+	//  - WeaponFalloffFarDistance
 	//  - WeaponSpreadMin
 	//  - WeaponSpreadMax
 	//  - WeaponSpreadProcess
@@ -218,6 +272,46 @@ protected:
 	UFUNCTION()
 	virtual void OnRep_RewardXP(const FGameplayAttributeData& OldRewardXP);
 
+
+	UFUNCTION()
+	virtual void OnRep_DamageDeltScale(const FGameplayAttributeData& OldDamageDeltScale);
+
+	UFUNCTION()
+	virtual void OnRep_DamageReceivedScale(const FGameplayAttributeData& OldDamageReceivedScale);
+
+	UFUNCTION()
+	virtual void OnRep_HealingDeltScale(const FGameplayAttributeData& OldHealingDeltScale);
+
+	UFUNCTION()
+	virtual void OnRep_HealingReceivedScale(const FGameplayAttributeData& OldHealingReceivedScale);
+
+	UFUNCTION()
+	virtual void OnRep_KnockbackDeltScale(const FGameplayAttributeData& OldKnockbackDeltScale);
+
+	UFUNCTION()
+	virtual void OnRep_KnockbackReceivedScale(const FGameplayAttributeData& OldKnockbackReceivedScale);
+
+	UFUNCTION()
+	virtual void OnRep_WeaponSpreadScale(const FGameplayAttributeData& OldWeaponSpreadScale);
+
+	UFUNCTION()
+	virtual void OnRep_ProjectileSpeedScale(const FGameplayAttributeData& OldProjectileSpeedScale);
+
+	UFUNCTION()
+	virtual void OnRep_HitscanFalloffDistanceScale(const FGameplayAttributeData& OldHitscanFalloffDistanceScale);
+
+	UFUNCTION()
+	virtual void OnRep_FireRateScale(const FGameplayAttributeData& OldFireRateScale);
+
+	UFUNCTION()
+	virtual void OnRep_CooldownRateScale(const FGameplayAttributeData& OldCooldownRateScale);
+
+	UFUNCTION()
+	virtual void OnRep_MoveSpeedScale(const FGameplayAttributeData& OldMoveSpeedScale);
+
+	UFUNCTION()
+	virtual void OnRep_UltimateGenRateScale(const FGameplayAttributeData& OldUltimateGenRateScale);
+
 	/// Proportionally adjust the value of an attribute when it's associated max attribute changes.
 	void AdjustAttributeOnMaxChange(
 		FGameplayAttributeData& AffectedAttribute, 
@@ -225,4 +319,16 @@ protected:
 		float NewMaxValue, 
 		const FGameplayAttribute& AffectedAttributeProperty
 	);
+
+private:
+	/// Apply the damage to all health components in this order:
+	/// OverArmor > OverHealth > Armor > Shield > Health.
+	void HandleDamage(const float DamageReceived);
+
+	/// Apply the healing to healable health components in this order:
+	/// Health > Shields > Armor.
+	void HandleHealing(const float HealingReceived);
+
+	/// Grant the Source ASC rewards for defeating you.
+	void HandleKillReward(UAbilitySystemComponent* SourceASC);
 };

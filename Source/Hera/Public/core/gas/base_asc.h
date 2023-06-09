@@ -44,7 +44,7 @@ public:
 		float FinalDamage
 	);
 
-	/// Called from UHealingExecution. Broadcasts to DamageReceivedDelegate whenever this ASC receives damage.
+	/// Called from UHealingExecution. Broadcasts to HealingReceivedDelegate whenever this ASC receives damage.
 	virtual void OnReceivedHealing(
 		UAbilitySystemComponentBase* SourceASC, 
 		float UnmitigatedHealing, 

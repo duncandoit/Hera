@@ -28,22 +28,25 @@
 ACharacterBaseValid::ACharacterBaseValid()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bAlwaysRelevant = true;
+	CharacterName = FText::FromString("Default");
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Overlap);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
-	GetThirdPersonMesh()->SetOnlyOwnerSee(true);
+	GetThirdPersonMesh()->SetOwnerNoSee(true);
+	GetThirdPersonMesh()->SetOnlyOwnerSee(false);
 	GetThirdPersonMesh()->SetupAttachment(GetCapsuleComponent());
 	GetThirdPersonMesh()->bCastDynamicShadow = true;
 	GetThirdPersonMesh()->CastShadow = true;
 	GetThirdPersonMesh()->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
-
-	bAlwaysRelevant = true;
+	GetThirdPersonMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Overlap);
+	GetThirdPersonMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
 	FloatingHealthbarComponent = CreateDefaultSubobject<UWidgetComponent>(FName("FloatingHealthbarComponent"));
 	FloatingHealthbarComponent->SetupAttachment(RootComponent);
 	FloatingHealthbarComponent->SetWidgetSpace(EWidgetSpace::Screen);
-	FloatingHealthbarComponent->SetDrawSize(FVector2D(500, 500));
+	FloatingHealthbarComponent->SetDrawSize(FVector2D(150, 150));
 
 	// We load in the blueprint widget in c++ so it's not up to each subclass to perform the boilerplate setup
 	HealthbarWidgetClass = StaticLoadClass(
@@ -67,6 +70,8 @@ ACharacterBaseValid::ACharacterBaseValid()
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponentBase>("AbilitySystemComponent");
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+	AbilitySystemComponent->DamageReceivedDelegate.AddDynamic(this, &ACharacterBaseValid::OnDamageReceived);
+	AbilitySystemComponent->HealingReceivedDelegate.AddDynamic(this, &ACharacterBaseValid::OnHealingReceived);
 
 	// Initializing the AttributeSet in the Owner Actor's constructor automatically registers
 	// it with the AbilitySystemComponent
@@ -74,20 +79,18 @@ ACharacterBaseValid::ACharacterBaseValid()
 
 	const auto Movement = GetCharacterMovement();
 	Movement->GravityScale = 2.0f;
-	Movement->JumpZVelocity = 650.0f;
-	Movement->AirControl = 0.5f;
-	Movement->MaxWalkSpeed = 550.f;
-	Movement->MaxWalkSpeedCrouched = 300.0f;
+	Movement->Mass = 100.f;
+	Movement->AirControl = DefaultAirControl();
+	Movement->MaxWalkSpeed = DefaultWalkSpeed();
+	Movement->MaxWalkSpeedCrouched = DefaultCrouchSpeed();
 	Movement->BrakingFrictionFactor = 1.0f;
-	Movement->BrakingDecelerationWalking = 6000.0f;
-	Movement->MaxAcceleration = 900000.0f;
+	Movement->BrakingDecelerationWalking = 10000.0f;
+	Movement->MaxAcceleration = 10000.0f;
 	Movement->bMaintainHorizontalGroundVelocity = false;
 	Movement->bCanWalkOffLedgesWhenCrouching = false;
 	Movement->bUseFlatBaseForFloorChecks = true;
 	// Movement->bCanEverCrouch = true;
 	// Movement->CanCrouch = true;
-
-	CharacterName = FText::FromString("Default");
 }
 
 void ACharacterBaseValid::BeginPlay()
@@ -96,6 +99,8 @@ void ACharacterBaseValid::BeginPlay()
 
 	float CapsuleHalfHeight = GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	FloatingHealthbarComponent->SetRelativeLocation(FVector(0, 0, CapsuleHalfHeight)); // Top of the capsule
+
+	GetCharacterMovement()->JumpZVelocity = VelocityForJumpHeight(100.f);
 
 	// Only needed for Heroes placed in world when the player is the Server.
 	// On respawn, they are set up in PossessedBy.
@@ -135,7 +140,72 @@ void ACharacterBaseValid::OnRep_PlayerState()
 	InitializeFloatingHealthbar();
 }
 
+float ACharacterBaseValid::VelocityForJumpHeight(const float Height/* cm */) const
+{
+	const auto MovementComponent = GetCharacterMovement();
+	const auto World = GetWorld();
+	if (!IsValid(MovementComponent) || !IsValid(World))
+	{
+		return 0.f;
+	}
 
+	// We convert to m from cm
+	const float JumpHeight = Height / 100.f;
+
+	// Gravity is in Newtons by default in the engine. We convert to m/s.
+	const float Gravity = MovementComponent->GravityScale > 0 
+	                         ? FMath::Abs(World->GetDefaultGravityZ() * MovementComponent->GravityScale) / 100.f
+	                         : 0;
+	// Final velocity is in cm/s
+	const float JumpVelocity = FMath::Sqrt(2.f * Gravity * JumpHeight) * 100;
+	
+	// GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Yellow, FString::Printf(
+	// 	TEXT("Gravity (m/s): %f"), Gravity)
+	// );
+	
+	// GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Yellow, FString::Printf(
+	// 	TEXT("Jump Height (m): %f"), JumpHeight)
+	// );
+
+	// GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Yellow, FString::Printf(
+	// 	TEXT("Velocity: %f\n\n"), JumpVelocity)
+	// );
+
+	return JumpVelocity;
+}
+
+void ACharacterBaseValid::DeathRagdoll() const
+{
+	if (const auto MovementComponent = GetMovementComponent())
+	{
+		// Disable the character's movement
+		GetCharacterMovement()->DisableMovement();
+		GetCharacterMovement()->SetComponentTickEnabled(false);
+	}
+
+	if (const auto ThirdPersonMesh = GetMesh())
+	{
+		// Set the skeletal mesh to physics simulation mode
+		ThirdPersonMesh->SetSimulatePhysics(true);
+		ThirdPersonMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+
+		// Apply a force or impulse to trigger the ragdoll physics
+		FVector Force = FVector::UpVector * 1000.f;
+		ThirdPersonMesh->AddForce(Force, NAME_None, true);
+	}
+
+	if (const auto Capsule = GetCapsuleComponent())
+	{
+		Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Capsule->DestroyComponent();
+	}
+
+	if (FloatingHealthbarComponent)
+	{
+		FloatingHealthbarComponent->SetHiddenInGame(true);
+		FloatingHealthbarComponent->DestroyComponent();
+	}
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 /// MARK: - Floating Healthbar
@@ -287,6 +357,39 @@ void ACharacterBaseValid::InitializeEffects()
 	AbilitySystemComponent->bDefaultEffectsInitialized = true;
 }
 
+void ACharacterBaseValid::OnDamageReceived_Implementation(
+	UAbilitySystemComponentBase* SourceASC, 
+	float UnmitigatedDamage, 
+	float FinalDamage
+)
+{
+	if (!IsAlive())
+	{
+		DeathRagdoll();
+	}
+}
+
+void ACharacterBaseValid::OnHealingReceived_Implementation(
+	UAbilitySystemComponentBase* SourceASC, 
+	float UnmitigatedHealing, 
+	float FinalHealing
+)
+{
+
+}
+
+void ACharacterBaseValid::OnMoveSpeedScaleChanged(
+	UAbilitySystemComponentBase* SourceASC, 
+	float NewScale
+)
+{
+	if (const auto Movement = GetCharacterMovement())
+	{
+		Movement->MaxWalkSpeed = DefaultWalkSpeed() * NewScale;
+		Movement->MaxWalkSpeedCrouched = DefaultCrouchSpeed() * NewScale;
+	}
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 /// MARK: - Attributes
 //---------------------------------------------------------------------------------------------------------------------
@@ -371,10 +474,19 @@ float ACharacterBaseValid::GetOverArmor() const
 	return 0.0f;
 }
 
+float ACharacterBaseValid::GetCurrentHealthPool() const
+{
+	return GetHealth() + GetShields() + GetArmor() + GetOverHealth() + GetOverArmor();
+}
+
+float ACharacterBaseValid::GetMaxHealthPool() const
+{
+	return GetMaxHealth() + GetMaxShields() + GetMaxArmor() + GetOverHealth() + GetOverArmor();
+}
+
 bool ACharacterBaseValid::IsAlive() const
 {
-	// We check againtst the floor because that's what the UI will be showing.
-	return FMath::Floor(GetHealth()) > 0;
+	return FMath::CeilToInt(GetHealth()) > 0;
 }
 
 float ACharacterBaseValid::GetMoveSpeed() const

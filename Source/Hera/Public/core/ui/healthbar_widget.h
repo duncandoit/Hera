@@ -7,18 +7,19 @@
 #include "healthbar_widget.generated.h"
 
 class ACharacterBaseValid;
+class UAbilitySystemComponentBase;
 
 UCLASS()
 class HERA_API UHealthbarWidget : public UUserWidget
 {
 	GENERATED_BODY()
-
-private:
-	ACharacterBaseValid* OwningCharacter;
 	
 public: 
    UFUNCTION(BlueprintPure, Category="Hera")
    ACharacterBaseValid* GetOwningCharacter() const { return OwningCharacter; }
+   
+	UFUNCTION(BlueprintPure, Category="Hera")
+   UAbilitySystemComponentBase* GetOwningASC() const { return OwningASC; }
 
    UFUNCTION(BlueprintCallable, Category="Hera")
    void SetOwningCharacter(ACharacterBaseValid* NewOwningCharacter);
@@ -46,4 +47,8 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category="Hera")
 	void SetOverArmor(float OverArmor);
+
+private:
+	ACharacterBaseValid* OwningCharacter;
+	UAbilitySystemComponentBase* OwningASC;
 };

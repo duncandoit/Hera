@@ -40,4 +40,48 @@ public:
 		const FGameplayAbilityActorInfo* ActorInfo, 
 		const FGameplayAbilitySpec& Spec
 	) override;
+
+protected:
+	/// @brief 
+	/// @param StartLocaion Location of the source Actor in World space
+	/// @param Direction The direction the source Actor is facing
+	/// @param Distance The distance from the StartLocaion that should be traced
+	/// @param DrawDebugLine Whether a line in the world should be drawn to show where the trace occurred
+	UFUNCTION(BlueprintCallable)
+	bool HitscanTrace(
+		FHitResult& OutHit,
+		const FVector StartLocation,
+		const FVector Direction,
+		const float Distance  = 10000.f,
+		// const FCollisionQueryParams& QueryParams = FCollisionQueryParams::DefaultQueryParam,
+		const bool bDrawDebug = false
+	);
+
+	/// Must be called from Server
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void Multicast_BoopCharacter(
+		const FVector Direction, 
+		const float Intensity, 
+		UCharacterMovementComponent* MovementComponent
+	);
+	void Multicast_BoopCharacter_Implementation(
+		const FVector Direction, 
+		const float Intensity, 
+		UCharacterMovementComponent* MovementComponent
+	);
+
+	/// Must be called from Server
+	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	void Multicast_BoopStaticMesh(
+		const FVector ImpactLocation,
+		const FVector Direction, 
+		const float Intensity, 
+		UStaticMeshComponent* MeshComponent
+	);
+	void Multicast_BoopStaticMesh_Implementation(
+		const FVector ImpactLocation,
+		const FVector Direction, 
+		const float Intensity, 
+		UStaticMeshComponent* MeshComponent
+	);
 };

@@ -2,7 +2,7 @@
 
 #include "core/ui/healthbar_widget.h"
 #include "core/actors/base_character.h"
-
+#include "core/gas/base_asc.h"
 
 void UHealthbarWidget::SetOwningCharacter(ACharacterBaseValid* NewOwningCharacter)
 {
@@ -12,4 +12,6 @@ void UHealthbarWidget::SetOwningCharacter(ACharacterBaseValid* NewOwningCharacte
    SetCurrentArmor(   OwningCharacter->GetArmor());
    SetOverHealth(     OwningCharacter->GetOverHealth());
    SetOverArmor(      OwningCharacter->GetOverArmor());
+
+   OwningASC =        Cast<UAbilitySystemComponentBase>(NewOwningCharacter->GetAbilitySystemComponent());
 }

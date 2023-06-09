@@ -2,7 +2,6 @@
 
 
 #include "core/gas/life_attribute_set.h"
-// #include "core/actors/base_character_actor.h"
 #include "core/actors/base_character.h"
 
 #include "GameplayEffect.h"
@@ -18,7 +17,7 @@ void ULifeAttributeSet::HandleDamage(const float DamageReceived /*, SourceCharac
 {
 	/// TODO: Check for GameplayTags like:
 	//       - Immortal       : Can't fall below 1hp
-	//       - Invulnerable   : Doesn't take any damage
+	//       - Invulnerable   : Doesn't take any damage or suffer from debuffs
 	//       - Weakened       : Takes more damage
 	//       - Fortified      : Takes less damage
 
@@ -78,13 +77,16 @@ void ULifeAttributeSet::HandleHealing(const float HealingReceived)
 	/// TODO: Check for GameplayTags like:
 	//       - Cursed : Can't receive healing
 
-	if (!(HealingReceived > 0.0f)) {
+	// We check for health that's under 1 because the UI will be showing the floor value. 
+	// So a value under between 1 and 0 will show 0 and the character will appear dead .
+	const float OldHealth  = GetHealth();
+	if (HealingReceived <= 0.f || OldHealth < 1.f) 
+	{
 		return;
 	}
 
 	// Starting values
 	float RemainingHealing = HealingReceived;
-	const float OldHealth  = GetHealth();
 	const float OldShields = GetShields();
 	const float OldArmor   = GetArmor();
 	const float HealthMax  = GetMaxHealth();
@@ -242,7 +244,7 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	/// MARK: Handle Damage/Healing
 	//----------------------------------------------------------------------------------------
 
-	// Damage
+	/// DAMAGE:
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
 		// Total damage received
@@ -279,7 +281,7 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		}
 	}// Damage
 
-	// Healing
+	/// HEALING:
 	else if (Data.EvaluatedData.Attribute == GetHealingAttribute())
 	{
 		const float HealingReceived = GetHealing();
@@ -289,7 +291,7 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 
    //----------------------------------------------------------------------------------------
 	/// MARK: Handle manual Attribute changes
-	//        : These changes were made in the ExecutionCalculation.
+	//        : These changes come from the ExecutionCalculation.
 	//        : Normal Health, Shields, Armor, etc loss/gain should go through Damage/Healing.
 	//----------------------------------------------------------------------------------------
 	
@@ -322,6 +324,15 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	{
 		SetOverArmor(FMath::Clamp(GetOverArmor(), 0.0f, UE_MAX_FLT));
 	}
+
+	else if (Data.EvaluatedData.Attribute == GetMoveSpeedScaleAttribute())
+	{
+		if (IsValid(TargetCharacter))
+		{
+			/// TODO: Change this to something more async / in the GAS flow
+			TargetCharacter->SetMoveSpeedScale(GetMoveSpeedScale());
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -353,57 +364,75 @@ void ULifeAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &Ou
 {
    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, MaxHealth,      COND_None, REPNOTIFY_Always);
-   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, Health,         COND_None, REPNOTIFY_Always);
-   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, MaxShields,     COND_None, REPNOTIFY_Always);
-   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, Shields,        COND_None, REPNOTIFY_Always);
-   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, MaxArmor,       COND_None, REPNOTIFY_Always);
-   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, Armor,          COND_None, REPNOTIFY_Always);
-   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, OverHealth,     COND_None, REPNOTIFY_Always);
-   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, OverArmor,      COND_None, REPNOTIFY_Always);
-   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, MoveSpeed,      COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, Level,          COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, XP,             COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, RewardXP,       COND_None, REPNOTIFY_Always);
+	// Health
+	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, MaxHealth,  COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, Health,     COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, MaxShields, COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, Shields,    COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, MaxArmor,   COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, Armor,      COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, OverHealth, COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, OverArmor,  COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, MoveSpeed,  COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, Level,      COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, XP,         COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, RewardXP,   COND_None, REPNOTIFY_Always);
+
+	// Scales
+	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, DamageDeltScale,             COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, DamageReceivedScale,         COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, HealingDeltScale,            COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, HealingReceivedScale,        COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, KnockbackDeltScale,          COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, KnockbackReceivedScale,      COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, WeaponSpreadScale,           COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, ProjectileSpeedScale,        COND_None, REPNOTIFY_Always);
+   DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, HitscanFalloffDistanceScale, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, FireRateScale,               COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, CooldownRateScale,           COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, MoveSpeedScale,              COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULifeAttributeSet, UltimateGenRateScale,        COND_None, REPNOTIFY_Always);
 }
 
-void ULifeAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData &OldMaxHealth)
+/// HEALTH:
+
+void ULifeAttributeSet::OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth)
 {
    // Used by the prediction system
    GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, MaxHealth, OldMaxHealth);
 }
 
-void ULifeAttributeSet::OnRep_Health(const FGameplayAttributeData &OldHealth)
+void ULifeAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
 {
    GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, Health, OldHealth);
 }
 
-void ULifeAttributeSet::OnRep_MaxShields(const FGameplayAttributeData &OldMaxShields)
+void ULifeAttributeSet::OnRep_MaxShields(const FGameplayAttributeData& OldMaxShields)
 {
    GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, MaxShields, OldMaxShields);
 }
 
-void ULifeAttributeSet::OnRep_Shields(const FGameplayAttributeData &OldShields)
+void ULifeAttributeSet::OnRep_Shields(const FGameplayAttributeData& OldShields)
 {
    GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, Shields, OldShields);
 }
 
-void ULifeAttributeSet::OnRep_MaxArmor(const FGameplayAttributeData &OldMaxArmor)
+void ULifeAttributeSet::OnRep_MaxArmor(const FGameplayAttributeData& OldMaxArmor)
 {
    GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, MaxArmor, OldMaxArmor);
 }
 
-void ULifeAttributeSet::OnRep_Armor(const FGameplayAttributeData &OldArmor)
+void ULifeAttributeSet::OnRep_Armor(const FGameplayAttributeData& OldArmor)
 {
    GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, Armor, OldArmor);
 }
 
-void ULifeAttributeSet::OnRep_OverHealth(const FGameplayAttributeData & OldOverHealth)
+void ULifeAttributeSet::OnRep_OverHealth(const FGameplayAttributeData& OldOverHealth)
 {
    GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, OverHealth, OldOverHealth);
 }
 
-void ULifeAttributeSet::OnRep_OverArmor(const FGameplayAttributeData &OldOverArmor)
+void ULifeAttributeSet::OnRep_OverArmor(const FGameplayAttributeData& OldOverArmor)
 {
    GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, OverArmor, OldOverArmor);
 }
@@ -426,4 +455,73 @@ void ULifeAttributeSet::OnRep_XP(const FGameplayAttributeData& OldXP)
 void ULifeAttributeSet::OnRep_RewardXP(const FGameplayAttributeData& OldRewardXP)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, RewardXP, OldRewardXP);
+}
+
+
+/// SCALES: cxvb
+
+void ULifeAttributeSet::OnRep_DamageDeltScale(const FGameplayAttributeData& OldDamageDeltScale)
+{
+   // Used by the prediction system
+   GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, DamageDeltScale, OldDamageDeltScale);
+}
+
+void ULifeAttributeSet::OnRep_DamageReceivedScale(const FGameplayAttributeData& OldDamageReceivedScale)
+{
+   GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, DamageReceivedScale, OldDamageReceivedScale);
+}
+
+void ULifeAttributeSet::OnRep_HealingDeltScale(const FGameplayAttributeData& OldHealingDeltScale)
+{
+   GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, HealingDeltScale, OldHealingDeltScale);
+}
+
+void ULifeAttributeSet::OnRep_HealingReceivedScale(const FGameplayAttributeData& OldHealingReceivedScale)
+{
+   GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, HealingReceivedScale, OldHealingReceivedScale);
+}
+
+void ULifeAttributeSet::OnRep_KnockbackDeltScale(const FGameplayAttributeData& OldKnockbackDeltScale)
+{
+   GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, KnockbackDeltScale, OldKnockbackDeltScale);
+}
+
+void ULifeAttributeSet::OnRep_KnockbackReceivedScale(const FGameplayAttributeData& OldKnockbackReceivedScale)
+{
+   GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, KnockbackReceivedScale, OldKnockbackReceivedScale);
+}
+
+void ULifeAttributeSet::OnRep_WeaponSpreadScale(const FGameplayAttributeData& OldWeaponSpreadScale)
+{
+   GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, WeaponSpreadScale, OldWeaponSpreadScale);
+}
+
+void ULifeAttributeSet::OnRep_ProjectileSpeedScale(const FGameplayAttributeData& OldProjectileSpeedScale)
+{
+   GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, ProjectileSpeedScale, OldProjectileSpeedScale);
+}
+
+void ULifeAttributeSet::OnRep_HitscanFalloffDistanceScale(const FGameplayAttributeData& OldHitscanFalloffDistanceScale)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, HitscanFalloffDistanceScale, OldHitscanFalloffDistanceScale);
+}
+
+void ULifeAttributeSet::OnRep_FireRateScale(const FGameplayAttributeData& OldFireRateScale)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, FireRateScale, OldFireRateScale);
+}
+
+void ULifeAttributeSet::OnRep_CooldownRateScale(const FGameplayAttributeData& OldCooldownRateScale)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, CooldownRateScale, OldCooldownRateScale);
+}
+
+void ULifeAttributeSet::OnRep_MoveSpeedScale(const FGameplayAttributeData& OldMoveSpeedScale)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, MoveSpeedScale, OldMoveSpeedScale);
+}
+
+void ULifeAttributeSet::OnRep_UltimateGenRateScale(const FGameplayAttributeData& OldUltimateGenRateScale)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ULifeAttributeSet, UltimateGenRateScale, OldUltimateGenRateScale);
 }
