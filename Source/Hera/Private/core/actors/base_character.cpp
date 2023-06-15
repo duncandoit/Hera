@@ -359,8 +359,8 @@ void ACharacterBaseValid::InitializeEffects()
 
 void ACharacterBaseValid::OnDamageReceived_Implementation(
 	UAbilitySystemComponentBase* SourceASC, 
-	float UnmitigatedDamage, 
-	float FinalDamage
+	float FinalDamage,
+	bool bIsDead
 )
 {
 	if (!IsAlive())
@@ -371,7 +371,6 @@ void ACharacterBaseValid::OnDamageReceived_Implementation(
 
 void ACharacterBaseValid::OnHealingReceived_Implementation(
 	UAbilitySystemComponentBase* SourceASC, 
-	float UnmitigatedHealing, 
 	float FinalHealing
 )
 {

@@ -10,16 +10,15 @@
 /// specified number of params listed: param type, param name
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
 	FDamageReceivedDelegate, 
-	/*param 1*/UAbilitySystemComponentBase*, SourceASC, 
-	/*param 2*/float, UnmitigatedDamage, 
-	/*param 3*/float, FinalDamage
+	/*param 1*/UAbilitySystemComponentBase*, SourceASC,
+	/*param 2*/float, FinalDamage,
+	/*param 3*/bool, bIsDead
 );
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	FHealingReceivedDelegate, 
 	/*param 1*/UAbilitySystemComponentBase*, SourceASC, 
-	/*param 2*/float, UnmitigatedHealing, 
-	/*param 3*/float, FinalHealing
+	/*param 2*/float, FinalHealing
 );
 
 UCLASS()
@@ -40,14 +39,13 @@ public:
 	/// Called from UDamageExecute. Broadcasts to DamageReceivedDelegate whenever this ASC receives damage.
 	virtual void OnReceivedDamage(
 		UAbilitySystemComponentBase* SourceASC, 
-		float UnmitigatedDamage, 
-		float FinalDamage
+		float FinalDamage,
+		bool bIsDead
 	);
 
 	/// Called from UHealingExecution. Broadcasts to HealingReceivedDelegate whenever this ASC receives damage.
 	virtual void OnReceivedHealing(
 		UAbilitySystemComponentBase* SourceASC, 
-		float UnmitigatedHealing, 
 		float FinalHealing
 	);
 };

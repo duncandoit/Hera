@@ -81,7 +81,7 @@ void UHealingExecution::Execute_Implementation(
 		if (const auto TargetHeroASC = Cast<UAbilitySystemComponentBase>(TargetASC))
 		{
 			const auto SourceHeroASC = Cast<UAbilitySystemComponentBase>(SourceASC);
-			TargetHeroASC->OnReceivedHealing(SourceHeroASC, UnmitigatedHealing, FinalHealing);
+			TargetHeroASC->OnReceivedHealing(SourceHeroASC, FinalHealing);
 		}
 	}
 }

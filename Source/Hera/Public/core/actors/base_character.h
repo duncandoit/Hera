@@ -98,6 +98,10 @@ public:
 	// It should return a reference to this OwningActor's AbilitySystemComponent 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	void OnMoveSpeedScaleChanged(
+		UAbilitySystemComponentBase* SourceASC, 
+		float NewScale
+	);
 protected:
 	// This function is called on the client and is a convenient place to 
 	// init the Ability System there. 
@@ -116,21 +120,18 @@ protected:
 
 	// Delegate response to ASC receiving damage
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Hera|Character|AbilitySystem")
-	void OnDamageReceived(UAbilitySystemComponentBase* SourceASC, float UnmitigatedDamage, float FinalDamage);
+	void OnDamageReceived(UAbilitySystemComponentBase* SourceASC, float FinalDamage, bool bIsDead);
 	virtual void OnDamageReceived_Implementation(
 		UAbilitySystemComponentBase* SourceASC, 
-		float UnmitigatedDamage, 
-		float FinalDamage
+		float FinalDamage,
+		bool bIsDead
 	);
 	
 	// Delegate response to ASC receiving healing
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Hera|Character|AbilitySystem")
-	void OnHealingReceived(UAbilitySystemComponentBase* SourceASC, float UnmitigatedHealing, float FinalHealing);
-	virtual void OnHealingReceived_Implementation(
-		UAbilitySystemComponentBase* SourceASC, 
-		float UnmitigatedHealing, 
-		float FinalHealing
-	);
+	void OnHealingReceived(UAbilitySystemComponentBase* SourceASC, float FinalHealing);
+	virtual void OnHealingReceived_Implementation(UAbilitySystemComponentBase* SourceASC, float FinalHealing);
+
 
 	UPROPERTY(
 		VisibleAnywhere, BlueprintReadOnly, Category="Hera|Character", 

@@ -2,6 +2,7 @@
 
 
 #include "core/gas/life_attribute_set.h"
+#include "core/gas/base_asc.h"
 #include "core/actors/base_character.h"
 
 #include "GameplayEffect.h"
@@ -21,7 +22,8 @@ void ULifeAttributeSet::HandleDamage(const float DamageReceived /*, SourceCharac
 	//       - Weakened       : Takes more damage
 	//       - Fortified      : Takes less damage
 
-	if (!(DamageReceived > 0)) {
+	const float OldHealth     = GetHealth();
+	if (DamageReceived <= 0.0f || OldHealth <= 0.0f) {
 		return;
 	}
 
@@ -31,8 +33,8 @@ void ULifeAttributeSet::HandleDamage(const float DamageReceived /*, SourceCharac
 	const float OldOverHealth = GetOverHealth();
 	const float OldArmor      = GetArmor();
 	const float OldShields    = GetShields();
-	const float OldHealth     = GetHealth();
 
+	// The amount of damage that can be applied to a 
 	auto DamagedValue = [&RemainingDamage](const float& OldValue) -> float
 	{
 		const float AttributeDamage = FMath::Min<float>(OldValue, RemainingDamage);
@@ -77,10 +79,8 @@ void ULifeAttributeSet::HandleHealing(const float HealingReceived)
 	/// TODO: Check for GameplayTags like:
 	//       - Cursed : Can't receive healing
 
-	// We check for health that's under 1 because the UI will be showing the floor value. 
-	// So a value under between 1 and 0 will show 0 and the character will appear dead .
 	const float OldHealth  = GetHealth();
-	if (HealingReceived <= 0.f || OldHealth < 1.f) 
+	if (HealingReceived <= 0.0f || OldHealth <= 0.0f) 
 	{
 		return;
 	}
@@ -192,6 +192,7 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 
 	auto Context = Data.EffectSpec.GetContext();
 	auto SourceASC = Context.GetOriginalInstigatorAbilitySystemComponent();
+	
 	const auto& SourceTags = *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags();
 	FGameplayTagContainer SpecAssetTags;
 	Data.EffectSpec.GetAllAssetTags(SpecAssetTags);
@@ -255,7 +256,6 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		{
 			// This prevents damage being added to dead things and replaying death animations
 			bool WasAlive = true;
-
 			if (TargetCharacter)
 			{
 				WasAlive = TargetCharacter->IsAlive();
@@ -263,8 +263,13 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 
 			HandleDamage(DamageReceived);
 
+			// Broadcast damage
+			// UAbilitySystemComponent* ASC = &Data.Target;
+			UAbilitySystemComponentBase* TargetASC = Cast<UAbilitySystemComponentBase>(&Data.Target);
+			TargetASC->OnReceivedDamage(Cast<UAbilitySystemComponentBase>(SourceASC), DamageReceived, !TargetCharacter->IsAlive());
+
 			// Post-damage effects
-			if (TargetCharacter && WasAlive)
+			if (WasAlive)
 			{
 				/// TODO: Feedback to SourceController
 			
@@ -330,7 +335,7 @@ void ULifeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 		if (IsValid(TargetCharacter))
 		{
 			/// TODO: Change this to something more async / in the GAS flow
-			TargetCharacter->SetMoveSpeedScale(GetMoveSpeedScale());
+			TargetCharacter->OnMoveSpeedScaleChanged(Cast<UAbilitySystemComponentBase>(SourceASC), GetMoveSpeedScale());
 		}
 	}
 }
@@ -458,7 +463,7 @@ void ULifeAttributeSet::OnRep_RewardXP(const FGameplayAttributeData& OldRewardXP
 }
 
 
-/// SCALES: cxvb
+/// SCALES: 1 is normal. 0 is off. 
 
 void ULifeAttributeSet::OnRep_DamageDeltScale(const FGameplayAttributeData& OldDamageDeltScale)
 {

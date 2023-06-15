@@ -1,22 +1,20 @@
 // Copyright Final Fall Games. All Rights Reserved.
 
-
 #include "core/gas/base_asc.h"
 
 void UAbilitySystemComponentBase::OnReceivedDamage(
-   UAbilitySystemComponentBase* SourceASC, 
-   float UnmitigatedDamage, 
-   float FinalDamage
+	UAbilitySystemComponentBase* SourceASC, 
+	float FinalDamage,
+	bool bIsDead
 )
 {
-	DamageReceivedDelegate.Broadcast(SourceASC, UnmitigatedDamage, FinalDamage);
+	DamageReceivedDelegate.Broadcast(SourceASC, FinalDamage, bIsDead);
 }
 
 void UAbilitySystemComponentBase::OnReceivedHealing(
-   UAbilitySystemComponentBase* SourceASC, 
-   float UnmitigatedHealing, 
-   float FinalHealing
+	UAbilitySystemComponentBase* SourceASC, 
+	float FinalHealing
 )
 {
-	HealingReceivedDelegate.Broadcast(SourceASC, UnmitigatedHealing, FinalHealing);
+	HealingReceivedDelegate.Broadcast(SourceASC, FinalHealing);
 }

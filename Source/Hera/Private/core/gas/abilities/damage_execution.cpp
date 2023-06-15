@@ -144,12 +144,12 @@ void UDamageExecution::Execute_Implementation(
 		// disable the GE from firing its cues after the calculation
 		// OutExecutionOutput.MarkGameplayCuesHandledManually();
 
-		// Broadcast to the Target's ASC
-		if (const auto TargetHeroASC = Cast<UAbilitySystemComponentBase>(TargetASC))
-		{
-			const auto SourceHeroASC = Cast<UAbilitySystemComponentBase>(SourceASC);
-			TargetHeroASC->OnReceivedDamage(SourceHeroASC, UnmitigatedDamage, FinalDamage);
-		}
+		// // Broadcast to the Target's ASC
+		// if (const auto TargetHeroASC = Cast<UAbilitySystemComponentBase>(TargetASC))
+		// {
+		// 	const auto SourceHeroASC = Cast<UAbilitySystemComponentBase>(SourceASC);
+		// 	TargetHeroASC->OnReceivedDamage(SourceHeroASC, UnmitigatedDamage, FinalDamage);
+		// }
 	}
 
 	// If we handle the stack count manually.

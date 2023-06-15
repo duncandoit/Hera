@@ -44,6 +44,8 @@ public:
 	/// Only triggers after changes to the BaseValue of an Attribute from an Instant or Periodic GameplayEffect. 
 	/// This is a valid place to clamp the changes to BaseValue and do more Attribute manipulation when they change 
 	/// from a GameplayEffect.
+	/// Note: Changes to Attributes have already happened, but they have not replicated back to clients yet. 
+	///       Clients will only receive the update after clamping/adjusting.
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
